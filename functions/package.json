@@ -1,0 +1,21 @@
+{
+  "name": "kashat-backend",
+  "description": "Secure Backend for Kashat App",
+  "scripts": {
+    "serve": "firebase emulators:start",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^12.1.0",
+    "firebase-functions": "^5.0.0",
+    "axios": "^1.6.0"
+  },
+  "private": true
+}

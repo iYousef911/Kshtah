@@ -1,0 +1,81 @@
+{
+  "fill" : {
+    "automatic-gradient" : "extended-srgb:0.00000,0.53333,1.00000,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "fill" : {
+            "automatic-gradient" : "srgb:1.00000,0.61793,0.08127,1.00000"
+          },
+          "image-name" : "mountain.2.fill.png",
+          "name" : "mountain.2.fill",
+          "position" : {
+            "scale" : 0.85,
+            "translation-in-points" : [
+              -2.2421875,
+              42.95703125
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
+        {
+          "blend-mode-specializations" : [
+            {
+              "appearance" : "dark",
+              "value" : "normal"
+            }
+          ],
+          "fill-specializations" : [
+            {
+              "value" : {
+                "automatic-gradient" : "srgb:0.00000,0.12249,1.00000,1.00000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "automatic-gradient" : "srgb:0.06887,1.00000,0.98331,1.00000"
+              }
+            }
+          ],
+          "image-name" : "moon.stars.png",
+          "name" : "moon.stars",
+          "position" : {
+            "scale" : 0.46,
+            "translation-in-points" : [
+              -269.40625,
+              -328.703125
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
