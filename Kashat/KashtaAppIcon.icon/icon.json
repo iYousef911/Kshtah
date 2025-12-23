@@ -5,17 +5,43 @@
   "groups" : [
     {
       "layers" : [
+
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
         {
           "fill" : {
-            "automatic-gradient" : "srgb:1.00000,0.61793,0.08127,1.00000"
+            "linear-gradient" : [
+              "display-p3:1.00085,0.73970,0.41038,1.00000",
+              "srgb:1.00000,0.61793,0.08127,1.00000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 0
+              },
+              "stop" : {
+                "x" : 0.7209940900981265,
+                "y" : 0.3790769432773109
+              }
+            }
           },
           "image-name" : "mountain.2.fill.png",
           "name" : "mountain.2.fill",
           "position" : {
             "scale" : 0.85,
             "translation-in-points" : [
-              -2.2421875,
-              42.95703125
+              9.13671875,
+              5.1015625
             ]
           }
         }

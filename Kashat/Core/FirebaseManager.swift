@@ -143,6 +143,37 @@ class FirebaseManager: ObservableObject {
         }
     }
     
+    // MARK: - Social Auth
+    
+    // Apple Sign In
+    func signInWithApple(idToken: String, nonce: String, fullName: String? = nil, completion: @escaping (Error?) -> Void) {
+        // Using likely custom or specific SDK extension method 'appleCredential'
+        // Passing nil for fullName to match expected signature (likely expects PersonNameComponents? or derived from ASAuthorization)
+        // If fullName String is available, we use it for our profile creation separately.
+        let credential = OAuthProvider.appleCredential(withIDToken: idToken, rawNonce: nonce, fullName: nil)
+        
+        auth.signIn(with: credential) { result, error in
+            if let error = error { completion(error); return }
+            if let user = result?.user {
+                self.createUserProfile(user: user, name: fullName)
+            }
+            completion(nil)
+        }
+    }
+    
+    // Google Sign In (Placeholder - specific implementation depends on GoogleSignIn package)
+    // You must add `import GoogleSignIn` and ensure the package is added to project
+    func signInWithGoogle(idToken: String, accessToken: String, completion: @escaping (Error?) -> Void) {
+        let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: accessToken)
+        auth.signIn(with: credential) { result, error in
+            if let error = error { completion(error); return }
+            if let user = result?.user {
+                self.createUserProfile(user: user)
+            }
+            completion(nil)
+        }
+    }
+    
     func signOut() {
         try? auth.signOut()
         self.verificationId = nil
@@ -167,12 +198,13 @@ class FirebaseManager: ObservableObject {
         }
     }
     
-    func createUserProfile(user: User) {
+    func createUserProfile(user: User, name: String? = nil) {
         let docRef = db.collection("users").document(user.uid)
         docRef.getDocument { snapshot, _ in
             if snapshot?.exists == false {
+                let initialName = name ?? "مشترك كشتات"
                 let data: [String: Any] = [
-                    "name": "مشترك كشتات",
+                    "name": initialName,
                     "phoneNumber": user.phoneNumber ?? "",
                     "balance": 0.0,
                     "joinDate": Timestamp(date: Date()),
@@ -180,6 +212,9 @@ class FirebaseManager: ObservableObject {
                     "favoriteGearIds": []
                 ]
                 docRef.setData(data)
+            } else if let name = name {
+                // Optionally update name if it was just "Kashat User" placeholder?
+                // For now, let's only set it on creation to avoid overwriting user edits.
             }
         }
     }
@@ -605,3 +640,4 @@ class FirebaseManager: ObservableObject {
         }
     }
 }
+

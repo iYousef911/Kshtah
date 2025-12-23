@@ -20,5 +20,7 @@
 	</array>
     <key>CFBundleDisplayName</key>
     <string>Kashat | كشتات</string>
+    <key>GIDClientID</key>
+    <string>14983282252-7ailbbh4ed61pjq31speliidsj50mfib.apps.googleusercontent.com</string>
 </dict>
 </plist>

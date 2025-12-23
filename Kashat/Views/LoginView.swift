@@ -7,6 +7,10 @@
 
 import SwiftUI
 import FirebaseAuth
+import AuthenticationServices
+import GoogleSignIn
+import CryptoKit
+internal import Combine
 
 struct LoginView: View {
     @ObservedObject var firebase = FirebaseManager.shared
@@ -22,48 +26,50 @@ struct LoginView: View {
     @State private var showTerms = false
     
     var body: some View {
-        ZStack {
-            LiquidBackgroundView()
-            
-            VStack(spacing: 30) {
-                Spacer()
+        GeometryReader { geometry in
+            ZStack {
+                // Unified Background
+                LiquidBackgroundView()
+                    .ignoresSafeArea()
                 
-                // Logo
-                VStack(spacing: 10) {
-                    Image(systemName: "tent.circle.fill")
-                        .font(.system(size: 100))
-                        .foregroundStyle(Color.white.gradient)
-                        .shadow(color: Color.blue.opacity(0.5), radius: 20)
-                    Text("كشتات").font(.system(size: 40, weight: .black, design: .rounded)).foregroundStyle(Color.white)
-                    Text("رفيقك في البر").font(.title3).foregroundStyle(Color.white.opacity(0.7))
-                }
-                
-                // Input Container
-                VStack(spacing: 20) {
-                    if !showOtpField { phoneInputView } else { otpInputView }
-                }
-                .padding(30).glassEffect(GlassStyle.regular, in: RoundedRectangle(cornerRadius: 30)).padding(.horizontal)
-                
-                if showError { Text(errorMessage).foregroundStyle(Color.red).font(.caption).padding().background(Color.black.opacity(0.6)).clipShape(Capsule()).transition(.opacity) }
-                
-                Spacer()
-                
-                // NEW: Legal Footer
-                if !showOtpField {
-                    VStack(spacing: 5) {
-                        Text("بتسجيل الدخول، أنت توافق على")
-                            .font(.caption2)
-                            .foregroundStyle(Color.white.opacity(0.6))
+                // Content Overlay
+                if geometry.size.width > 600 {
+                    // iPad / Landscape / Wide Screen - Immersive Split
+                    HStack(spacing: 0) {
+                        // Left Side: Branding (Floating)
+                        BrandingView()
+                            .frame(width: geometry.size.width * 0.5)
+                            .frame(maxHeight: .infinity)
                         
-                        HStack(spacing: 20) {
-                            Button("شروط الاستخدام") { showTerms = true }
-                            Button("سياسة الخصوصية") { showPrivacy = true }
+                        // Right Side: Login Form (Glass Card)
+                        ZStack {
+                            ScrollView {
+                                VStack(spacing: 40) {
+                                    Spacer(minLength: 50)
+                                    InputFormView
+                                    Spacer(minLength: 50)
+                                }
+                                .padding(.horizontal, 40) // Internal padding for form
+                                .frame(minHeight: geometry.size.height)
+                            }
                         }
-                        .font(.caption2)
-                        .fontWeight(.bold)
-                        .foregroundStyle(Color.white)
+                        .frame(width: geometry.size.width * 0.5)
                     }
-                    .padding(.bottom, 20)
+                } else {
+                    // iPhone / Portrait / Narrow Screen - Stacked Immersive
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            Spacer(minLength: 60)
+                            BrandingView()
+                                .padding(.bottom, 40)
+                            
+                            InputFormView
+                                .padding(.horizontal, 24)
+                                .padding(.bottom, 40)
+                            Spacer(minLength: 20)
+                        }
+                        .frame(minHeight: geometry.size.height)
+                    }
                 }
             }
         }
@@ -73,14 +79,172 @@ struct LoginView: View {
         .sheet(isPresented: $showPrivacy) { LegalView(title: "سياسة الخصوصية", content: LegalData.privacyPolicy) }
     }
     
-    var phoneInputView: some View {
-        VStack(spacing: 20) {
-            Text("تسجيل الدخول").font(.headline).foregroundStyle(Color.white).frame(maxWidth: .infinity, alignment: .leading)
-            HStack { Text("🇸🇦").font(.title2); Divider().background(Color.white); TextField("+96655...", text: $phoneNumber).keyboardType(.phonePad).foregroundStyle(Color.white) }
-            .padding().glassEffect(GlassStyle.regular, in: RoundedRectangle(cornerRadius: 16))
+    @ViewBuilder
+    func BrandingView() -> some View {
+        VStack(spacing: 15) {
+            Image(systemName: "tent.circle.fill")
+                .font(.system(size: 120))
+                .foregroundStyle(Color.white.gradient)
+                .shadow(color: Color.blue.opacity(0.6), radius: 30, x: 0, y: 10)
+                
+            Text("كشتات")
+                .font(.system(size: 50, weight: .black, design: .rounded))
+                .foregroundStyle(Color.white)
+                
+            Text("رفيقك في البر")
+                .font(.title2)
+                .fontWeight(.medium)
+                .foregroundStyle(Color.white.opacity(0.8))
+        }
+    }
+    
+    var InputFormView: some View {
+        VStack(spacing: 30) {
             
-            Button(action: sendCode) { if isProcessing { ProgressView().tint(.black) } else { Text("إرسال الرمز").fontWeight(.bold).frame(maxWidth: .infinity) } }
-            .padding().background(Color.white).foregroundStyle(Color.black).clipShape(Capsule()).disabled(phoneNumber.count < 10 || isProcessing).opacity(phoneNumber.count < 10 ? 0.5 : 1.0)
+            // Container for Inputs
+            VStack(spacing: 25) {
+                if !showOtpField { phoneInputView } else { otpInputView }
+            }
+            .padding(30)
+            .glassEffect(GlassStyle.regular, in: RoundedRectangle(cornerRadius: 30))
+            
+            if showError {
+                HStack(spacing: 10) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                    Text(errorMessage)
+                }
+                .font(.caption)
+                .padding()
+                .background(Color.red.opacity(0.8))
+                .foregroundStyle(.white)
+                .clipShape(Capsule())
+                .transition(.opacity)
+            }
+            
+            // Social Login Section
+             if !showOtpField {
+                 HStack(spacing: 15) {
+                     Rectangle().fill(Color.white.opacity(0.3)).frame(height: 1)
+                     Text("أو").font(.caption).foregroundStyle(Color.white.opacity(0.7))
+                     Rectangle().fill(Color.white.opacity(0.3)).frame(height: 1)
+                 }
+                 .padding(.vertical, 10)
+                 
+                 VStack(spacing: 12) {
+                     // Apple Sign In
+                     Button(action: startAppleSignIn) {
+                         HStack {
+                             Image(systemName: "apple.logo")
+                                 .font(.title2)
+                             Text("تسجيل الدخول بـ Apple")
+                                 .fontWeight(.semibold)
+                         }
+                         .frame(maxWidth: .infinity)
+                         .padding()
+                         .background(Color.white)
+                         .foregroundStyle(Color.black)
+                         .clipShape(Capsule())
+                     }
+                     
+                     // Google Sign In
+                     Button(action: startGoogleSignIn) {
+                         HStack {
+                             Image("google") // Custom Google Logo
+                                 .resizable()
+                                 .scaledToFit()
+                                 .frame(width: 24, height: 24)
+                             Text("تسجيل الدخول بـ Google")
+                                 .fontWeight(.semibold)
+                         }
+                         .frame(maxWidth: .infinity)
+                         .padding()
+                         .background(Color.white)
+                         .foregroundStyle(Color.black)
+                         .clipShape(Capsule())
+                     }
+                 }
+             }
+            
+            // Legal Footer
+            if !showOtpField {
+                VStack(spacing: 10) {
+                    Text("بتسجيل الدخول، أنت توافق على")
+                        .font(.caption)
+                        .foregroundStyle(Color.white.opacity(0.6))
+                    
+                    HStack(spacing: 20) {
+                        Button("شروط الاستخدام") { showTerms = true }
+                        Button("سياسة الخصوصية") { showPrivacy = true }
+                    }
+                    .font(.footnote)
+                    .fontWeight(.bold)
+                    .foregroundStyle(Color.white)
+                    .underline(true, color: .white.opacity(0.3))
+                }
+            }
+        }
+    }
+    
+    var phoneInputView: some View {
+        VStack(spacing: 25) {
+            // Header
+            VStack(alignment: .leading, spacing: 8) {
+                Text("تأكيد الرمز ورقم الهاتف")
+                    .font(.title2.bold())
+                    .foregroundStyle(Color.white)
+                Text("سيتم إرسال رمز التحقق عبر رسالة نصية")
+                    .font(.caption)
+                    .foregroundStyle(Color.white.opacity(0.7))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            
+            // Split Inputs
+            HStack(spacing: 12) {
+                // Country Code Box
+                HStack(spacing: 4) {
+                    Text("🇸🇦")
+                    Text("+966")
+                        .fontWeight(.semibold)
+                        .foregroundStyle(Color.white)
+//                        .scaleEffect(x: -1, y: 1) // Mirror for RTL layout consistency if needed, but numbers are LTR usually. 
+                        // Actually, purely visual +966 is fine without mirroring if alignment is correct.
+                        // Let's keep it simple.
+                }
+                .padding()
+                .frame(height: 55)
+                .glassEffect(GlassStyle.regular, in: RoundedRectangle(cornerRadius: 16))
+                
+                // Phone Number Box
+                TextField("55...", text: $phoneNumber)
+                    .keyboardType(.phonePad)
+                    .foregroundStyle(Color.white)
+                    .accentColor(.white)
+                    .colorScheme(.dark)
+                    .padding()
+                    .frame(height: 55)
+                    .glassEffect(GlassStyle.regular, in: RoundedRectangle(cornerRadius: 16))
+            }
+            
+            // Main Action Button
+            Button(action: sendCode) {
+                if isProcessing {
+                    ProgressView().tint(.white)
+                } else {
+                    Text("التالي") // "Next"
+                        .fontWeight(.bold)
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .frame(height: 55)
+            .background(Color.blue) // Use Blue to match reference "Next" button color, or keep White? 
+            // Reference had Blue button. Let's use Blue for a fresh look, or White to match Glass theme.
+            // User asked "make design similar to this one" -> Reference has Blue button.
+            // I will use Blue.
+            .foregroundStyle(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .disabled(phoneNumber.count < 9 || isProcessing) // Adjusted count check for 55... (9 digits)
+            .opacity(phoneNumber.count < 9 ? 0.6 : 1.0)
         }
     }
     
@@ -88,7 +252,16 @@ struct LoginView: View {
         VStack(spacing: 20) {
             Text("التحقق من الرمز").font(.headline).foregroundStyle(Color.white)
             Text("تم إرسال الرمز إلى \(phoneNumber)").font(.caption).foregroundStyle(Color.white.opacity(0.7))
-            TextField("XXXXXX", text: $otpCode).keyboardType(.numberPad).multilineTextAlignment(.center).font(.system(size: 30, weight: .bold, design: .monospaced)).foregroundStyle(Color.white).padding().glassEffect(GlassStyle.regular, in: RoundedRectangle(cornerRadius: 16)).onChange(of: otpCode) { if otpCode.count == 6 { verifyOtp() } }
+            TextField("XXXXXX", text: $otpCode)
+                .keyboardType(.numberPad)
+                .multilineTextAlignment(.center)
+                .font(.system(size: 30, weight: .bold, design: .monospaced))
+                .foregroundStyle(Color.white)
+                .accentColor(.white)
+                .colorScheme(.dark)
+                .padding()
+                .glassEffect(GlassStyle.regular, in: RoundedRectangle(cornerRadius: 16))
+                .onChange(of: otpCode) { if otpCode.count == 6 { verifyOtp() } }
             
             Button(action: verifyOtp) { if isProcessing { ProgressView().tint(.black) } else { Text("تحقق").fontWeight(.bold).frame(maxWidth: .infinity) } }
             .padding().background(Color.white).foregroundStyle(Color.black).clipShape(Capsule()).disabled(otpCode.count < 6 || isProcessing)
@@ -113,6 +286,127 @@ struct LoginView: View {
             }
         }
     }
+    
+    // MARK: - Social Login Handlers
+    // MARK: - Social Login Handlers
+    func startAppleSignIn() {
+        let appleIDProvider = ASAuthorizationAppleIDProvider()
+        let request = appleIDProvider.createRequest()
+        request.requestedScopes = [.fullName, .email]
+        
+        let nonce = randomNonceString()
+        currentNonce = nonce
+        request.nonce = sha256(nonce)
+        
+        let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+        authorizationController.delegate = coordinator
+        authorizationController.presentationContextProvider = coordinator
+        authorizationController.performRequests()
+    }
+    
+    func startGoogleSignIn() {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let rootViewController = windowScene.windows.first?.rootViewController else { return }
+        
+        GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { result, error in
+            if let error = error {
+                print("Error signing in with Google: \(error.localizedDescription)")
+                self.errorMessage = error.localizedDescription
+                self.showError = true
+                return
+            }
+            
+            guard let user = result?.user,
+                  let idToken = user.idToken?.tokenString else { return }
+            
+            // Note: GoogleSignIn 7.0+ uses 'user.idToken?.tokenString'
+            // Check GoogleSignIn version. Assuming standard recent version.
+            
+            let accessToken = user.accessToken.tokenString
+            
+            // Call Firebase
+             FirebaseManager.shared.signInWithGoogle(idToken: idToken, accessToken: accessToken) { error in
+                 if let error = error {
+                     self.errorMessage = error.localizedDescription
+                     self.showError = true
+                 } else {
+                     // Success handled by Auth State Listener in App
+                 }
+             }
+        }
+    }
+    
+    // --- Apple Sign In Helpers ---
+    @State private var currentNonce: String?
+    @StateObject private var coordinator = SignInWithAppleCoordinator()
+}
+
+// MARK: - SignInWithAppleCoordinator
+class SignInWithAppleCoordinator: NSObject, ObservableObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
+    
+    func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        return UIApplication.shared.connectedScenes
+            .first { $0.activationState == .foregroundActive }
+            .map { $0 as? UIWindowScene }
+            .flatMap { $0?.windows.first } ?? UIWindow()
+    }
+    
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+        if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
+            guard let nonce = currentNonce else {
+                print("Invalid state: A login callback was received, but no login request was sent.")
+                return
+            }
+            
+            guard let appleIDToken = appleIDCredential.identityToken else {
+                print("Unable to fetch identity token")
+                return
+            }
+            
+            guard let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
+                print("Unable to serialize token string from data: \(appleIDToken.debugDescription)")
+                return
+            }
+            
+            // Extract Full Name
+            var fullName: String? = nil
+            if let nameComponents = appleIDCredential.fullName {
+                fullName = PersonNameComponentsFormatter().string(from: nameComponents)
+            }
+            
+            FirebaseManager.shared.signInWithApple(idToken: idTokenString, nonce: nonce, fullName: fullName) { error in
+                if let error = error {
+                    print("Error authenticating: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+    
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+        print("Sign in with Apple errored: \(error.localizedDescription)")
+    }
+}
+
+// Global Helper for Nonce
+private var currentNonce: String?
+
+private func randomNonceString(length: Int = 32) -> String {
+    precondition(length > 0)
+    var randomBytes = [UInt8](repeating: 0, count: length)
+    let errorCode = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
+    if errorCode != errSecSuccess {
+        fatalError("Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)")
+    }
+    
+    let charset: [Character] = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+    let nonce = randomBytes.map { charset[Int($0) % charset.count] }
+    return String(nonce)
+}
+
+private func sha256(_ input: String) -> String {
+    let inputData = Data(input.utf8)
+    let hashedData = SHA256.hash(data: inputData)
+    return hashedData.compactMap { String(format: "%02x", $0) }.joined()
 }
 
 #Preview {
