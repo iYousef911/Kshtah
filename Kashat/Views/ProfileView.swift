@@ -8,10 +8,17 @@
 import SwiftUI
 import FirebaseAuth
 import UserNotifications // NEW: Import for local notifications
+import AuthenticationServices // NEW: For Passkey Registration
+import LocalAuthentication
+internal import Combine
 
 struct ProfileView: View {
     @EnvironmentObject var store: AppDataStore
     @EnvironmentObject var settings: SettingsManager
+    @StateObject private var biometricManager = BiometricManager.shared // NEW: Biometric Logic
+    
+    // App Lock State
+    @AppStorage("isAppLockEnabled") private var isAppLockEnabled = false
     
     // Sheet States
     @State private var showMyBookings = false
@@ -180,6 +187,13 @@ struct ProfileView: View {
                             // Notifications
                             SettingsRow(icon: "bell.fill", title: settings.t("الإشعارات"), isToggle: true, isOn: $settings.notificationsEnabled)
                             
+                            // App Lock (FaceID)
+                            // if biometricManager.biometricType != .none { // TEMPORARY: Commented out for Simulator Testing
+                            if true {
+                                Divider().background(Color.white.opacity(0.1)).padding(.horizontal)
+                                SettingsRow(icon: "faceid", title: "قفل التطبيق", isToggle: true, isOn: $isAppLockEnabled)
+                            }
+                            
 //                            // NEW: Test Notification Button (For Simulator Testing)
 //                            if settings.notificationsEnabled {
 //                                Button(action: sendTestNotification) {
@@ -338,6 +352,8 @@ struct ProfileView: View {
         }
     }
 }
+    
+
 
 // MARK: - Helper Components
 

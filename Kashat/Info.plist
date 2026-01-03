@@ -22,5 +22,11 @@
     <string>Kashat | كشتات</string>
     <key>GIDClientID</key>
     <string>14983282252-7ailbbh4ed61pjq31speliidsj50mfib.apps.googleusercontent.com</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>نحتاج الوصول لموقعك لتحديد اتجاه القبلة بدقة.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>نحتاج الوصول لموقعك لتحديد اتجاه القبلة بدقة.</string>
+    <key>NSFaceIDUsageDescription</key>
+    <string>نحتاج الوصول لـ FaceID لتأمين التطبيق.</string>
 </dict>
 </plist>

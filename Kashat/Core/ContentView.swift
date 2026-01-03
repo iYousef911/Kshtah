@@ -12,26 +12,84 @@ struct ContentView: View {
     @EnvironmentObject var settings: SettingsManager // NEW: settings for localization
     @State private var selectedTab = 0
     
+    // App Lock Logic
+    @AppStorage("isAppLockEnabled") private var isAppLockEnabled = false
+    @State private var isLocked = true
+    @StateObject private var biometricManager = BiometricManager.shared
+    
     var body: some View {
-        if firebase.user != nil {
-            // LOGGED IN: Show Main App
-            ZStack {
-                LiquidBackgroundView()
-                
-                TabView(selection: $selectedTab) {
-                    HomeFeedView().tabItem { Label(settings.t("الرئيسية"), systemImage: "house.fill") }.tag(0)
-                    MarketplaceView().tabItem { Label(settings.t("السوق"), systemImage: "bag.fill") }.tag(1)
-                    KashatMap().tabItem { Label(settings.t("الخريطة"), systemImage: "map.fill") }.tag(2)
-                    ProfileView().tabItem { Label(settings.t("حسابي"), systemImage: "person.fill") }.tag(3)
+        Group {
+            if firebase.user != nil {
+                // LOGGED IN: Show Main App
+                ZStack {
+                    LiquidBackgroundView()
+                    
+                    TabView(selection: $selectedTab) {
+                        HomeFeedView().tabItem { Label(settings.t("الرئيسية"), systemImage: "house.fill") }.tag(0)
+                        MarketplaceView().tabItem { Label(settings.t("السوق"), systemImage: "bag.fill") }.tag(1)
+                        KashatMap().tabItem { Label(settings.t("الخريطة"), systemImage: "map.fill") }.tag(2)
+                        ProfileView().tabItem { Label(settings.t("حسابي"), systemImage: "person.fill") }.tag(3)
+                    }
+                    .toolbarBackground(.visible, for: .tabBar)
+                    .toolbarBackground(.ultraThinMaterial, for: .tabBar)
+                    .tint(Color.white)
                 }
-                .toolbarBackground(.visible, for: .tabBar)
-                .toolbarBackground(.ultraThinMaterial, for: .tabBar)
-                .tint(Color.white)
+                .preferredColorScheme(.dark)
+            } else {
+                // LOGGED OUT: Show Login
+                LoginView()
             }
-            .preferredColorScheme(.dark)
-        } else {
-            // LOGGED OUT: Show Login
-            LoginView()
+        }
+        .overlay {
+            if isAppLockEnabled && isLocked {
+                LockedView(unlockAction: unlockApp)
+            }
+        }
+        .onAppear {
+            if isAppLockEnabled {
+                unlockApp()
+            } else {
+                isLocked = false
+            }
+        }
+    }
+    
+    func unlockApp() {
+        biometricManager.authenticateUser { success in
+            if success {
+                withAnimation { isLocked = false }
+            }
+        }
+    }
+}
+
+// MARK: - Locked View
+struct LockedView: View {
+    var unlockAction: () -> Void
+    
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            
+            VStack(spacing: 20) {
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 60))
+                    .foregroundStyle(.white)
+                
+                Text("التطبيق مقفل")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.white)
+                
+                Button(action: unlockAction) {
+                    Label("فتح القفل", systemImage: "faceid")
+                        .font(.headline)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundStyle(.white)
+                        .clipShape(Capsule())
+                }
+            }
         }
     }
 }

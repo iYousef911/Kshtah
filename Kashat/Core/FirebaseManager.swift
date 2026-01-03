@@ -212,7 +212,7 @@ class FirebaseManager: ObservableObject {
                     "favoriteGearIds": []
                 ]
                 docRef.setData(data)
-            } else if let name = name {
+            } else if name != nil {
                 // Optionally update name if it was just "Kashat User" placeholder?
                 // For now, let's only set it on creation to avoid overwriting user edits.
             }

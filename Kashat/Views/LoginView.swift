@@ -340,6 +340,8 @@ struct LoginView: View {
         }
     }
     
+
+    
     // --- Apple Sign In Helpers ---
     // Removed shadowing var: @State private var currentNonce: String?
     @StateObject private var coordinator = SignInWithAppleCoordinator()
@@ -359,12 +361,19 @@ class SignInWithAppleCoordinator: NSObject, ObservableObject, ASAuthorizationCon
     
     func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
         if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
+             // ... (Apple ID Logic)
+             handleAppleID(credential: appleIDCredential)
+        }
+        currentController = nil // Release reference
+    }
+    
+    func handleAppleID(credential: ASAuthorizationAppleIDCredential) {
             guard let nonce = currentNonce else {
                 print("Invalid state: A login callback was received, but no login request was sent.")
                 return
             }
             
-            guard let appleIDToken = appleIDCredential.identityToken else {
+            guard let appleIDToken = credential.identityToken else {
                 print("Unable to fetch identity token")
                 return
             }
@@ -376,7 +385,7 @@ class SignInWithAppleCoordinator: NSObject, ObservableObject, ASAuthorizationCon
             
             // Extract Full Name
             var fullName: String? = nil
-            if let nameComponents = appleIDCredential.fullName {
+            if let nameComponents = credential.fullName {
                 fullName = PersonNameComponentsFormatter().string(from: nameComponents)
             }
             
@@ -385,8 +394,6 @@ class SignInWithAppleCoordinator: NSObject, ObservableObject, ASAuthorizationCon
                     print("Error authenticating: \(error.localizedDescription)")
                 }
             }
-        }
-        currentController = nil // Release reference
     }
     
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
