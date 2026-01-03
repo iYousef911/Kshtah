@@ -20,14 +20,14 @@ struct RentalCheckoutView: View {
     @State private var showSuccess = false
     
     // Payment Method State
-    @State private var selectedPaymentMethod: PaymentMethod = .applePay
+    @State private var selectedPaymentMethod: PaymentMethod = .creditCard // Default to Credit Card (Apple Pay Removed)
     
     // NEW: Payment Manager
     @StateObject private var paymentManager = PaymentManager()
     @State private var errorMessage = ""
     
     enum PaymentMethod {
-        case applePay
+        // case applePay // HIDDEN FOR APP STORE
         case creditCard
     }
     
@@ -105,7 +105,8 @@ struct RentalCheckoutView: View {
                                 Text("طريقة الدفع").font(.headline).foregroundStyle(Color.white).padding(.horizontal)
                                 
                                 HStack(spacing: 15) {
-                                    // Apple Pay Button
+                                /*
+                                    // Apple Pay Button (HIDDEN)
                                     Button(action: { withAnimation { selectedPaymentMethod = .applePay } }) {
                                         PaymentOption(
                                             icon: "applelogo",
@@ -114,6 +115,7 @@ struct RentalCheckoutView: View {
                                         )
                                     }
                                     .buttonStyle(.plain)
+                                */
                                     
                                     // Credit Card Button
                                     Button(action: { withAnimation { selectedPaymentMethod = .creditCard } }) {
@@ -146,6 +148,7 @@ struct RentalCheckoutView: View {
                     // Pay Button
                     VStack {
                         Spacer()
+                        /*
                         if selectedPaymentMethod == .applePay {
                             // Use Custom Action Button that triggers Apple Pay Manager
                             Button(action: processApplePay) {
@@ -153,12 +156,13 @@ struct RentalCheckoutView: View {
                             }
                             .disabled(isProcessing)
                         } else {
-                            // Use Regular Button for Credit Card (Simulation)
+                        */
+                        // Always show Credit Card
                             Button(action: processCreditCard) {
                                 PayButtonContent(isProcessing: isProcessing, amount: grandTotal, icon: "creditcard.fill")
                             }
                             .disabled(isProcessing)
-                        }
+                        //}
                     }
                 }
             }

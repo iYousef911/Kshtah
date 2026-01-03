@@ -22,6 +22,7 @@ struct ProfileView: View {
     @State private var showPrivacy = false
     @State private var showTerms = false
     @State private var showCopyAlert = false // NEW: Alert state
+    @State private var showDeleteAccountAlert = false // NEW: Delete Account Alert
     
     // Live Data Accessors
     var userName: String { store.userProfile?.name ?? "جاري التحميل..." }
@@ -106,7 +107,8 @@ struct ProfileView: View {
                         }
                         .padding(.top, 20)
                         
-                        // 2. Wallet Card
+                        /*
+                        // 2. Wallet Card (HIDDEN FOR APP STORE)
                         VStack(alignment: .leading, spacing: 15) {
                             HStack {
                                 Image(systemName: "wallet.pass.fill")
@@ -146,6 +148,7 @@ struct ProfileView: View {
                         .padding(20)
                         .glassEffect(GlassStyle.regular.interactive(), in: RoundedRectangle(cornerRadius: 24))
                         .padding(.horizontal)
+                        */
                         
                         // 3. Settings List
                         VStack(spacing: 4) {
@@ -241,6 +244,23 @@ struct ProfileView: View {
                         .glassEffect(GlassStyle.regular, in: RoundedRectangle(cornerRadius: 24))
                         .padding(.horizontal)
                         
+                        // Delete Account Button (Requirement)
+                        Button(action: { showDeleteAccountAlert = true }) {
+                            Text("حذف الحساب")
+                                .fontWeight(.medium)
+                                .foregroundStyle(Color.white.opacity(0.8))
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .glassEffect(GlassStyle.regular.interactive(), in: Capsule())
+                        }
+                        .padding(.horizontal)
+                        .alert("حذف الحساب نهائياً؟", isPresented: $showDeleteAccountAlert) {
+                            Button("إلغاء", role: .cancel) { }
+                            Button("حذف", role: .destructive) { deleteAccount() }
+                        } message: {
+                            Text("سيتم حذف جميع بياناتك ولا يمكن التراجع عن هذا الإجراء.")
+                        }
+                        
                         // Logout Button
                         Button(action: {
                             try? FirebaseManager.shared.auth.signOut()
@@ -301,6 +321,19 @@ struct ProfileView: View {
                 print("Notification scheduled! Background the app now.")
             } else {
                 print("Notification permission denied")
+            }
+        }
+    }
+
+    
+    // MARK: - Account Deletion
+    func deleteAccount() {
+        FirebaseManager.shared.deleteAccount { error in
+            if let error = error {
+                print("Error deleting account: \(error.localizedDescription)")
+                // Optionally show error alert
+            } else {
+                // Determine logic handled by auth listener in ContentView or here
             }
         }
     }

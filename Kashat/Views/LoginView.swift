@@ -301,6 +301,10 @@ struct LoginView: View {
         let authorizationController = ASAuthorizationController(authorizationRequests: [request])
         authorizationController.delegate = coordinator
         authorizationController.presentationContextProvider = coordinator
+        
+        // Retain the controller in the coordinator to ensure it stays alive
+        coordinator.currentController = authorizationController
+        
         authorizationController.performRequests()
     }
     
@@ -337,18 +341,20 @@ struct LoginView: View {
     }
     
     // --- Apple Sign In Helpers ---
-    @State private var currentNonce: String?
+    // Removed shadowing var: @State private var currentNonce: String?
     @StateObject private var coordinator = SignInWithAppleCoordinator()
 }
 
 // MARK: - SignInWithAppleCoordinator
 class SignInWithAppleCoordinator: NSObject, ObservableObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
+    // Keep a strong reference to the controller to prevent premature deallocation
+    var currentController: ASAuthorizationController?
     
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        return UIApplication.shared.connectedScenes
-            .first { $0.activationState == .foregroundActive }
-            .map { $0 as? UIWindowScene }
-            .flatMap { $0?.windows.first } ?? UIWindow()
+        // More robust scene finding
+        let scenes = UIApplication.shared.connectedScenes
+        let windowScene = scenes.first { $0.activationState == .foregroundActive } as? UIWindowScene
+        return windowScene?.windows.first { $0.isKeyWindow } ?? UIWindow()
     }
     
     func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
@@ -380,10 +386,12 @@ class SignInWithAppleCoordinator: NSObject, ObservableObject, ASAuthorizationCon
                 }
             }
         }
+        currentController = nil // Release reference
     }
     
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
         print("Sign in with Apple errored: \(error.localizedDescription)")
+        currentController = nil // Release reference
     }
 }
 

@@ -629,6 +629,33 @@ class FirebaseManager: ObservableObject {
         ])
     }
     
+    // MARK: - Account Deletion
+    func deleteAccount(completion: @escaping (Error?) -> Void) {
+        guard let user = auth.currentUser else { return }
+        let uid = user.uid
+
+        // 1. Delete Firestore Data
+        db.collection("users").document(uid).delete { error in
+            if let error = error {
+                completion(error)
+                return
+            }
+
+            // 2. Delete Auth Account
+            user.delete { error in
+                if let error = error {
+                    // Requires re-authentication if it's been a while, handling that might be needed in UI.
+                    // For now, we pass the error back.
+                    completion(error)
+                } else {
+                    // 3. Clear Local State
+                    self.signOut()
+                    completion(nil)
+                }
+            }
+        }
+    }
+
     func processRentalTransaction(payerUid: String, ownerName: String, totalAmount: Double, commission: Double, completion: @escaping (Bool) -> Void) {
         deductBalance(uid: payerUid, amount: totalAmount) { success in
             if success {
