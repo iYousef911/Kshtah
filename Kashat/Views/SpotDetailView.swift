@@ -90,6 +90,19 @@ struct SpotDetailView: View {
                     }
                     .padding().glassEffect(GlassStyle.regular, in: Capsule()).padding(.horizontal)
                     
+                    // Weather Attribution
+                    HStack(spacing: 4) {
+                        Text(" Weather")
+                            .font(.caption2)
+                            .foregroundStyle(.white.opacity(0.6))
+                        Link("Legal", destination: URL(string: "https://weatherkit.apple.com/legal-attribution.html")!)
+                            .font(.caption2)
+                            .underline()
+                            .foregroundStyle(.white.opacity(0.6))
+                    }
+                    .padding(.top, -10)
+                    .padding(.bottom, 10)
+                    
                     // 3. Actions
                     HStack(spacing: 15) {
                         Button(action: {

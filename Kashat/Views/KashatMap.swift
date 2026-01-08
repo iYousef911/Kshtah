@@ -10,8 +10,9 @@ import MapKit
 
 struct KashatMap: View {
     @EnvironmentObject var store: AppDataStore
+    @Environment(\.horizontalSizeClass) var sizeClass // NEW: Responsive Layout
     @State private var showAddSpotSheet = false
-    @State private var showSpotDetailSheet = false // New State
+    @State private var showSpotDetailSheet = false
     
     @State private var position: MapCameraPosition = .region(
         MKCoordinateRegion(
@@ -52,11 +53,51 @@ struct KashatMap: View {
             .onMapCameraChange { context in
                 currentCenter = context.camera.centerCoordinate
             }
+            // NEW: Handle Selection Logic based on Device Type
+            .onChange(of: selectedSpot) { _, newSpot in // Using iOS 17+ syntax properly or generic
+                if newSpot != nil {
+                    if sizeClass == .compact {
+                        showSpotDetailSheet = true
+                    } else {
+                        // iPad: Do nothing, binding updates state, side panel appears via logic below
+                        showSpotDetailSheet = false
+                    }
+                }
+            }
             .mapControls {
                // MapUserLocationButton() // Custom button used instead
                 MapCompass()
                 MapScaleView()
             }
+            
+            // NEW: iPad Side Panel
+            if sizeClass == .regular, let spot = selectedSpot {
+                HStack {
+                    ZStack(alignment: .topTrailing) {
+                        SpotDetailView(spot: spot)
+                            .clipShape(RoundedRectangle(cornerRadius: 24))
+                            .frame(width: 400)
+                            .shadow(color: .black.opacity(0.3), radius: 20)
+                            
+                        // Close Button for Panel
+                        Button(action: {
+                            selectedSpot = nil
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.largeTitle)
+                                .foregroundStyle(Color.white)
+                                .shadow(radius: 5)
+                                .padding()
+                        }
+                    }
+                    .padding()
+                    .transition(.move(edge: .leading))
+                    .zIndex(100)
+                    
+                    Spacer()
+                }
+            }
+
             // Center Crosshair (Only in Add Mode)
             if isAddMode {
                 Image(systemName: "plus")
@@ -133,7 +174,7 @@ struct KashatMap: View {
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
         }
-        // NEW: Detail Sheet
+        // NEW: Detail Sheet (Only for Compact/iPhone)
         .sheet(isPresented: $showSpotDetailSheet) {
             if let spot = selectedSpot {
                 SpotDetailView(spot: spot)

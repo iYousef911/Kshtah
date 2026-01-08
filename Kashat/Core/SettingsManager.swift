@@ -93,7 +93,24 @@ class SettingsManager: ObservableObject {
                 "قريبا ...": "Coming Soon ...",
                 "نعمل على تجهيز سوق الكشتة لخدمتكم بشكل أفضل": "We are working on preparing the camping market to serve you better",
                 "ريال": "SAR",
-                "يوم": "day"
+                "يوم": "day",
+                
+                // Profile & Settings
+                "عرض سجل التأجير": "View rental history",
+                "قفل التطبيق": "App Lock",
+                "تواصل معنا": "Contact us",
+                "سياسة الخصوصية": "Privacy Policy",
+                "شروط الاستخدام": "Terms of Use",
+                "تحديث البيانات (Admin)": "Update Data (Admin)",
+                "رفع المنتجات للسيرفر": "Upload products to server",
+                "حذف الحساب": "Delete Account",
+                "حذف الحساب نهائياً؟": "Delete account permanently?",
+                "سيتم حذف جميع بياناتك ولا يمكن التراجع عن هذا الإجراء.": "All your data will be deleted and this action cannot be undone.",
+                "حذف": "Delete",
+                "إلغاء": "Cancel",
+                "مكان": "places",
+                "تم نسخ البريد الإلكتروني ✅": "Email copied ✅",
+                "حسناً": "OK"
             ]
             return dict[key] ?? key
         }

@@ -33,6 +33,7 @@ struct ContentView: View {
                     .toolbarBackground(.visible, for: .tabBar)
                     .toolbarBackground(.ultraThinMaterial, for: .tabBar)
                     .tint(Color.white)
+                    .id(settings.language) // Force Rebuild on Language Change
                 }
                 .preferredColorScheme(.dark)
             } else {

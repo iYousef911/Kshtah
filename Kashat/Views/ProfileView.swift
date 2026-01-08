@@ -161,13 +161,13 @@ struct ProfileView: View {
                         VStack(spacing: 4) {
                             // My Orders
                             Button(action: { showMyBookings = true }) {
-                                SettingsRow(icon: "cube.box.fill", title: settings.t("طلباتي"), subtitle: "عرض سجل التأجير")
+                                SettingsRow(icon: "cube.box.fill", title: settings.t("طلباتي"), subtitle: settings.t("عرض سجل التأجير"))
                             }
                             .buttonStyle(.plain)
                             
                             // Favorites
                             Button(action: { showFavorites = true }) {
-                                SettingsRow(icon: "heart.fill", title: settings.t("المفضلة"), subtitle: "١٢ مكان")
+                                SettingsRow(icon: "heart.fill", title: settings.t("المفضلة"), subtitle: "١٢ \(settings.t("مكان"))")
                             }
                             .buttonStyle(.plain)
                             
@@ -191,7 +191,7 @@ struct ProfileView: View {
                             // if biometricManager.biometricType != .none { // TEMPORARY: Commented out for Simulator Testing
                             if true {
                                 Divider().background(Color.white.opacity(0.1)).padding(.horizontal)
-                                SettingsRow(icon: "faceid", title: "قفل التطبيق", isToggle: true, isOn: $isAppLockEnabled)
+                                SettingsRow(icon: "faceid", title: settings.t("قفل التطبيق"), isToggle: true, isOn: $isAppLockEnabled)
                             }
                             
 //                            // NEW: Test Notification Button (For Simulator Testing)
@@ -227,30 +227,30 @@ struct ProfileView: View {
                                     }
                                 }
                             }) {
-                                SettingsRow(icon: "questionmark.circle.fill", title: settings.t("المساعدة والدعم"), subtitle: "تواصل معنا")
+                                SettingsRow(icon: "questionmark.circle.fill", title: settings.t("المساعدة والدعم"), subtitle: settings.t("تواصل معنا"))
                             }
                             .buttonStyle(.plain)
-                            .alert("تم نسخ البريد الإلكتروني ✅", isPresented: $showCopyAlert) {
-                                Button("حسناً", role: .cancel) { }
+                            .alert(settings.t("تم نسخ البريد الإلكتروني ✅"), isPresented: $showCopyAlert) {
+                                Button(settings.t("حسناً"), role: .cancel) { }
                             } message: {
                                 Text("لم نتمكن من فتح تطبيق البريد. تم نسخ (\(store.supportEmail)) إلى الحافظة.")
                             }
                             
                             // Legal Section
                             Button(action: { showPrivacy = true }) {
-                                SettingsRow(icon: "hand.raised.fill", title: "سياسة الخصوصية", subtitle: "")
+                                SettingsRow(icon: "hand.raised.fill", title: settings.t("سياسة الخصوصية"), subtitle: "")
                             }
                             .buttonStyle(.plain)
                             
                             Button(action: { showTerms = true }) {
-                                SettingsRow(icon: "doc.text.fill", title: "شروط الاستخدام", subtitle: "")
+                                SettingsRow(icon: "doc.text.fill", title: settings.t("شروط الاستخدام"), subtitle: "")
                             }
                             .buttonStyle(.plain)
                             
                             // Admin Seed Button (Hidden in production)
                             Divider().background(Color.white.opacity(0.1)).padding(.horizontal)
                             Button(action: { store.seedGearData() }) {
-                                SettingsRow(icon: "server.rack", title: "تحديث البيانات (Admin)", subtitle: "رفع المنتجات للسيرفر", hasChevron: false)
+                                SettingsRow(icon: "server.rack", title: settings.t("تحديث البيانات (Admin)"), subtitle: settings.t("رفع المنتجات للسيرفر"), hasChevron: false)
                             }
                             .buttonStyle(.plain)
                         }
@@ -260,7 +260,7 @@ struct ProfileView: View {
                         
                         // Delete Account Button (Requirement)
                         Button(action: { showDeleteAccountAlert = true }) {
-                            Text("حذف الحساب")
+                            Text(settings.t("حذف الحساب"))
                                 .fontWeight(.medium)
                                 .foregroundStyle(Color.white.opacity(0.8))
                                 .padding()
@@ -268,11 +268,11 @@ struct ProfileView: View {
                                 .glassEffect(GlassStyle.regular.interactive(), in: Capsule())
                         }
                         .padding(.horizontal)
-                        .alert("حذف الحساب نهائياً؟", isPresented: $showDeleteAccountAlert) {
-                            Button("إلغاء", role: .cancel) { }
-                            Button("حذف", role: .destructive) { deleteAccount() }
+                        .alert(settings.t("حذف الحساب نهائياً؟"), isPresented: $showDeleteAccountAlert) {
+                            Button(settings.t("إلغاء"), role: .cancel) { }
+                            Button(settings.t("حذف"), role: .destructive) { deleteAccount() }
                         } message: {
-                            Text("سيتم حذف جميع بياناتك ولا يمكن التراجع عن هذا الإجراء.")
+                            Text(settings.t("سيتم حذف جميع بياناتك ولا يمكن التراجع عن هذا الإجراء."))
                         }
                         
                         // Logout Button
