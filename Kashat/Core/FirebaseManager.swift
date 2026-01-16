@@ -666,5 +666,40 @@ class FirebaseManager: ObservableObject {
             }
         }
     }
+    
+    // MARK: - Categories (Dynamic)
+    func fetchCategories(completion: @escaping ([Category]) -> Void) {
+        db.collection("categories").order(by: "sortOrder", descending: false).getDocuments { snapshot, error in
+            guard let documents = snapshot?.documents else { completion([]); return }
+            
+            let categories = documents.compactMap { doc -> Category? in
+                let data = doc.data()
+                guard let name = data["name"] as? String,
+                      let type = data["type"] as? String,
+                      let icon = data["icon"] as? String else { return nil }
+                
+                return Category(
+                    id: doc.documentID,
+                    name: name,
+                    type: type,
+                    icon: icon,
+                    sortOrder: data["sortOrder"] as? Int ?? 0,
+                    isActive: data["isActive"] as? Bool ?? true
+                )
+            }
+            completion(categories)
+        }
+    }
+    
+    func addCategoryToFirebase(_ category: Category) {
+        let data: [String: Any] = [
+            "name": category.name,
+            "type": category.type,
+            "icon": category.icon,
+            "sortOrder": category.sortOrder,
+            "isActive": category.isActive
+        ]
+        db.collection("categories").document(category.id).setData(data)
+    }
 }
 

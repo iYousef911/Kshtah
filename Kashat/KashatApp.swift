@@ -9,6 +9,7 @@ import SwiftUI
 import FirebaseCore
 import FirebaseAuth
 import FirebaseMessaging // NEW IMPORT
+import OneSignalFramework
 
 class AppDelegate: NSObject, UIApplicationDelegate, MessagingDelegate { // NEW Protocol
     func application(_ application: UIApplication,
@@ -21,6 +22,19 @@ class AppDelegate: NSObject, UIApplicationDelegate, MessagingDelegate { // NEW P
             print("Permission granted: \(granted)")
         }
         application.registerForRemoteNotifications()
+        
+        
+        // Enable verbose logging for debugging (remove in production)
+               OneSignal.Debug.setLogLevel(.LL_VERBOSE)
+               // Initialize with your OneSignal App ID
+               OneSignal.initialize("425a7450-e204-4d77-b5f3-9f9246ae9d3f", withLaunchOptions: launchOptions)
+               // Use this method to prompt for push notifications.
+               // We recommend removing this method after testing and instead use In-App Messages to prompt for notification permission.
+               OneSignal.Notifications.requestPermission({ accepted in
+                 print("User accepted notifications: \(accepted)")
+               }, fallbackToSettings: false)
+
+        
         
         return true
     }

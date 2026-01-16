@@ -25,6 +25,8 @@ class AppDataStore: ObservableObject {
     @Published var chats: [ChatThread] = []
     @Published var activeThreadMessages: [ChatMessage] = []
     @Published var userProfile: UserProfile?
+    @Published var categories: [Category] = [] // NEW: Dynamic Categories
+    @Published var recommendedSpots: [RecommendedSpot] = [] // NEW: Smart Recommendations
     
     // Feature Flags
     @Published var isMarketplaceEnabled: Bool = false
@@ -36,7 +38,7 @@ class AppDataStore: ObservableObject {
     
     // Production Configs
     @Published var isMaintenanceMode: Bool = false
-    @Published var supportEmail: String = "support@kashat.sa"
+    @Published var supportEmail: String = "yad3v.dev@gmail.com"
     @Published var minRequiredVersion: String = "1.0.0"
     
     // Experiment 4, 5, 6
@@ -75,6 +77,7 @@ class AppDataStore: ObservableObject {
         // 2. Fetch Initial Content (Gear/Spots)
         fetchGear()
         fetchSpots() // NEW: Ensure spots are fetched
+        fetchCategories() // NEW: Dynamic Categories
         
         // 3. Fetch Remote Config
         firebase.fetchRemoteConfig { [weak self] (marketplace, wallet, homeTitle, showBanner, themeColor, code, maintenance, email, minVersion, fee, btnStyle, payMethod) in
@@ -254,6 +257,7 @@ class AppDataStore: ObservableObject {
                 guard let self = self else { return }
                 // FIXED: Use only real data
                 self.spots = fetchedSpots
+                self.fetchRecommendations() // NEW: Trigger AI logic
             }
         }
     }
@@ -405,5 +409,50 @@ class AppDataStore: ObservableObject {
     
     func isGearFavorite(_ item: GearItem) -> Bool {
         return favoriteGearIds.contains(item.id)
+    }
+    
+    // MARK: - AI Recommendations
+    func fetchRecommendations() {
+        Task {
+            let recs = await RecommendationManager.shared.getWeekendRecommendations(spots: self.spots)
+            DispatchQueue.main.async {
+                withAnimation {
+                    self.recommendedSpots = recs
+                }
+            }
+        }
+    }
+    
+    // MARK: - Dynamic Categories logic
+    func fetchCategories() {
+        firebase.fetchCategories { [weak self] fetchedCats in
+            DispatchQueue.main.async {
+                if fetchedCats.isEmpty {
+                    // Fallback / Seeding for first run
+                    self?.seedDefaultCategories()
+                } else {
+                    self?.categories = fetchedCats
+                }
+            }
+        }
+    }
+    
+    // Seed initial categories if Firestore is empty
+    func seedDefaultCategories() {
+        let defaults = [
+            Category(id: "all", name: "الكل", type: "الكل", icon: "square.grid.2x2.fill", sortOrder: 0),
+            Category(id: "camps", name: "مخيمات", type: "مخيمات", icon: "tent.fill", sortOrder: 1),
+            Category(id: "sand", name: "كثبان", type: "كثبان", icon: "wind", sortOrder: 2),
+            Category(id: "valley", name: "وادي", type: "وادي", icon: "water.waves", sortOrder: 3),
+            Category(id: "mountain", name: "جبل", type: "جبل", icon: "mountain.2.fill", sortOrder: 4),
+            Category(id: "beach", name: "شاطئ", type: "شاطئ", icon: "sun.max.fill", sortOrder: 5)
+        ]
+        
+        self.categories = defaults
+        
+        // Upload to Firebase for persistence
+        for cat in defaults {
+            firebase.addCategoryToFirebase(cat)
+        }
     }
 }

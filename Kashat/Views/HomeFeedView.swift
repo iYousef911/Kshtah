@@ -126,28 +126,18 @@ struct HomeFeedContent: View {
         store.userProfile?.name.components(separatedBy: " ").first ?? "ضيف"
     }
     
-    let categories = ["الكل", "مخيمات", "كثبان", "وادي", "جبل", "شاطئ"]
+    // REMOVED: let categories = [...] (Now using store.categories)
     
     var filteredSpots: [CampingSpot] {
         if selectedCategory == "الكل" {
             return store.spots
         } else {
+            // Updated filtering logic for dynamic types
             return store.spots.filter { $0.type == selectedCategory }
         }
     }
     
     // Helper to get icon (duplicated logic for simplicity in extraction or moved to shared)
-    func getIconForCategory(_ category: String) -> String {
-        switch category {
-        case "الكل": return "square.grid.2x2.fill"
-        case "مخيمات": return "tent.fill"
-        case "كثبان": return "wind"
-        case "وادي": return "water.waves"
-        case "جبل": return "mountain.2.fill"
-        case "شاطئ": return "sun.max.fill"
-        default: return "mappin.and.ellipse"
-        }
-    }
     
     var body: some View {
         ScrollView {
@@ -196,14 +186,15 @@ struct HomeFeedContent: View {
                 // Categories
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 15) {
-                        ForEach(categories, id: \.self) { category in
+                        // Dynamic Categories Loop
+                        ForEach(store.categories) { category in
                             Button(action: {
-                                withAnimation { selectedCategory = category }
+                                withAnimation { selectedCategory = category.type }
                             }) {
                                 CategoryGlassPill(
-                                    icon: getIconForCategory(category),
-                                    title: settings.t(category),
-                                    isSelected: selectedCategory == category,
+                                    icon: category.icon,
+                                    title: settings.t(category.name),
+                                    isSelected: selectedCategory == category.type,
                                     activeColor: store.appColor
                                 )
                             }
@@ -241,6 +232,46 @@ struct HomeFeedContent: View {
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .padding(.horizontal)
+                }
+                
+                // NEW: Smart Recommendations Section
+                if !store.recommendedSpots.isEmpty {
+                    VStack(alignment: .leading) {
+                        HStack {
+                            Text(settings.t("🌞 كشتة الويكند"))
+                                .font(.title2.bold())
+                                .foregroundStyle(Color.white)
+                            Spacer()
+                            HStack(spacing: 4) {
+                                Image(systemName: "sparkles")
+                                Text(settings.t("مدعوم بالذكاء"))
+                            }
+                            .font(.caption)
+                            .foregroundStyle(Color.yellow)
+                            .padding(6)
+                            .background(Color.white.opacity(0.1))
+                            .clipShape(Capsule())
+                        }
+                        .padding(.horizontal)
+                        
+                        Text(settings.t("اخترنا لك أفضل الأماكن بناءً على الطقس في عطلة نهاية الأسبوع!"))
+                            .font(.caption)
+                            .foregroundStyle(Color.white.opacity(0.7))
+                            .padding(.horizontal)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 15) {
+                                ForEach(store.recommendedSpots) { rec in
+                                    RecommendationCard(recommendation: rec)
+                                        .onTapGesture {
+                                            selectedSpot = rec.spot
+                                        }
+                                }
+                            }
+                            .padding(.horizontal)
+                            .padding(.bottom, 20)
+                        }
+                    }
                 }
                 
                 // Featured Spots Section
@@ -298,6 +329,7 @@ struct HomeFeedContent: View {
         .toolbar(.hidden, for: .navigationBar)
         .refreshable {
             store.fetchSpots()
+            store.fetchCategories() // NEW: Refresh categories
         }
         .sheet(isPresented: $showInbox) { InboxView().presentationDetents([.large]) }
         .sheet(isPresented: $showNotifications) { NotificationsView().presentationDetents([.medium]) }

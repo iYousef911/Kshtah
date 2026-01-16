@@ -34,6 +34,16 @@ struct CampingSpot: Identifiable, Hashable {
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
 }
 
+// NEW: Dynamic Category Model
+struct Category: Identifiable, Hashable, Codable {
+    let id: String
+    let name: String // Display Name (e.g., "مخيمات")
+    let type: String // Filter Key (e.g., "Camping")
+    let icon: String // SF Symbol
+    let sortOrder: Int
+    var isActive: Bool = true
+}
+
 struct GearItem: Identifiable, Hashable, Codable {
     let id: UUID
     let name: String

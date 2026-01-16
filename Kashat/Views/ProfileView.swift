@@ -247,12 +247,20 @@ struct ProfileView: View {
                             }
                             .buttonStyle(.plain)
                             
-                            // Admin Seed Button (Hidden in production)
-                            Divider().background(Color.white.opacity(0.1)).padding(.horizontal)
-                            Button(action: { store.seedGearData() }) {
-                                SettingsRow(icon: "server.rack", title: settings.t("تحديث البيانات (Admin)"), subtitle: settings.t("رفع المنتجات للسيرفر"), hasChevron: false)
+                            // Admin Seed Button (Hidden for non-admins)
+                            if store.userProfile?.isAdmin == true {
+                                Divider().background(Color.white.opacity(0.1)).padding(.horizontal)
+                                Button(action: { store.seedGearData() }) {
+                                    SettingsRow(icon: "server.rack", title: settings.t("تحديث البيانات (Admin)"), subtitle: "Seed Gear", hasChevron: false)
+                                }
+                                .buttonStyle(.plain)
+                                
+                                // Reset Categories Button
+                                Button(action: { store.seedDefaultCategories() }) {
+                                    SettingsRow(icon: "arrow.counterclockwise.circle.fill", title: settings.t("إعادة تعيين التصنيفات"), subtitle: "Reset Categories", hasChevron: false)
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(.plain)
                         }
                         .padding()
                         .glassEffect(GlassStyle.regular, in: RoundedRectangle(cornerRadius: 24))
