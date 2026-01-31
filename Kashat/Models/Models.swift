@@ -77,6 +77,7 @@ struct UserProfile: Identifiable, Codable {
     var favoriteGearIds: [String] = []
     var profileImageURL: String?
     var isAdmin: Bool = false // NEW: Admin Flag
+    var isPro: Bool = false // NEW: Pro Subscription Flag
 }
 
 enum BookingStatus: String, Codable {
@@ -122,6 +123,7 @@ struct Comment: Identifiable, Hashable, Codable {
     var rating: Int?
     var imageURL: String?
     var isAdmin: Bool = false // NEW: Admin Comment
+    var isPro: Bool = false // NEW: Pro Comment
     
     var timeAgo: String {
         let formatter = RelativeDateTimeFormatter()

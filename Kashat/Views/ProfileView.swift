@@ -97,10 +97,25 @@ struct ProfileView: View {
                                         .font(.title2)
                                         .fontWeight(.bold)
                                         .foregroundStyle(Color.white)
+                                    
                                     if store.userProfile?.isAdmin == true {
                                         Image(systemName: "checkmark.shield.fill")
                                             .font(.title3)
                                             .foregroundStyle(Color.blue)
+                                    }
+                                    
+                                    if SubscriptionManager.shared.isPro || store.userProfile?.isPro == true {
+                                        Text("PRO")
+                                            .font(.caption2)
+                                            .fontWeight(.black)
+                                            .foregroundStyle(.white)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(
+                                                LinearGradient(colors: [.orange, .red], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                            )
+                                            .clipShape(Capsule())
+                                            .shadow(color: .orange.opacity(0.3), radius: 4)
                                     }
                                 }
                                 

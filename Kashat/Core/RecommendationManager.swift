@@ -27,13 +27,31 @@ class RecommendationManager {
     private let weatherManager = WeatherManager.shared
     
     // Analyze and rank spots based on upcoming weekend weather
-    func getWeekendRecommendations(spots: [CampingSpot]) async -> [RecommendedSpot] {
+    // If userLocation is provided, prioritizes spots within 400km
+    func getWeekendRecommendations(spots: [CampingSpot], userLocation: CLLocation?) async -> [RecommendedSpot] {
+        // 1. Filter by Distance (if location known)
+        let spotsToScore: [CampingSpot]
+        
+        if let userLoc = userLocation {
+            let maxDistance: CLLocationDistance = 400_000 // 400km in meters
+            
+            let nearbySpots = spots.filter { spot in
+                let spotLoc = CLLocation(latitude: spot.coordinate.latitude, longitude: spot.coordinate.longitude)
+                return spotLoc.distance(from: userLoc) <= maxDistance
+            }
+            
+            // If we have nearby spots, focus on them. Otherwise, fallback to all.
+            spotsToScore = nearbySpots.isEmpty ? spots : nearbySpots
+        } else {
+            spotsToScore = spots
+        }
+        
         var scoredSpots: [RecommendedSpot] = []
         
-        // For simple demo, we check CURRENT weather. 
+        // For simple demo, we check CURRENT weather.
         // In production, we'd calculate the date for next Friday.
         
-        for spot in spots {
+        for spot in spotsToScore {
             if let weather = await weatherManager.getWeather(latitude: spot.coordinate.latitude, longitude: spot.coordinate.longitude) {
                 
                 let currentTemp = weather.currentWeather.temperature.value
@@ -73,36 +91,45 @@ class RecommendationManager {
                 // Cap score between 0 and 100
                 score = max(0, min(100, score))
                 
-                // --- AI Insight Generation ---
-                var insight = ""
-                if currentTemp >= 20 && currentTemp <= 28 && wind < 15 {
-                    insight = "الجو ممتاز! درجة حرارة معتدلة (\(Int(currentTemp))°) ورياح هادئة، مكان مثالي للكشتة."
-                } else if currentTemp < 15 {
-                    insight = "الجو بارد قليلاً (\(Int(currentTemp))°). تأكد من إحضار ملابس دافئة وفروة!"
-                } else if currentTemp > 35 {
-                    insight = "الجو حار (\(Int(currentTemp))°). الأفضل للكشتات المسائية."
-                } else if wind > 25 {
-                    insight = "رياح نشطة (\(Int(wind)) كم/س). تأكد من تثبيت الخيمة جيداً."
-                } else if condition == .clear {
-                    insight = "سماء صافية الليلة! فرصة ممتازة لتأمل النجوم بعيداً عن أضواء المدينة."
-                } else {
-                    insight = "الأجواء مستقرة. خيار جيد لطلعة سريعة."
-                }
-                
-                // Create Recommendation
+                // Create intermediate object without insight logic yet
                 let rec = RecommendedSpot(
                     spot: spot,
                     weatherScore: max(0, min(100, score)),
                     temperature: currentTemp,
                     condition: condition.description,
-                    smartInsight: insight
+                    smartInsight: "جاري التحليل..." // Placeholder
                 )
                 
                 scoredSpots.append(rec)
             }
         }
         
-        // Return top 3 sorted by score
-        return scoredSpots.sorted { $0.weatherScore > $1.weatherScore }.prefix(3).map { $0 }
+        // Sort and pick top 3
+        let topSpots = scoredSpots.sorted { $0.weatherScore > $1.weatherScore }.prefix(3)
+        
+        // Generate AI Insights ONLY for the top 3 (to save cost/time)
+        var finalRecommendations: [RecommendedSpot] = []
+        
+        for var rec in topSpots {
+            // Call AI Service
+            let insight = await AIService.shared.generateInsight(
+                spotName: rec.spot.name,
+                location: rec.spot.location,
+                temperature: rec.temperature,
+                condition: rec.condition
+            )
+            
+            // Create new struct with AI text
+            let updatedRec = RecommendedSpot(
+                spot: rec.spot,
+                weatherScore: rec.weatherScore,
+                temperature: rec.temperature,
+                condition: rec.condition,
+                smartInsight: insight
+            )
+            finalRecommendations.append(updatedRec)
+        }
+
+        return finalRecommendations
     }
 }

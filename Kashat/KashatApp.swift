@@ -10,6 +10,7 @@ import FirebaseCore
 import FirebaseAuth
 import FirebaseMessaging // NEW IMPORT
 import OneSignalFramework
+import SuperwallKit
 
 class AppDelegate: NSObject, UIApplicationDelegate, MessagingDelegate { // NEW Protocol
     func application(_ application: UIApplication,
@@ -35,6 +36,10 @@ class AppDelegate: NSObject, UIApplicationDelegate, MessagingDelegate { // NEW P
                }, fallbackToSettings: false)
 
         
+        
+        // Initialize Superwall (Kashat PRO)
+        // REPLACE with your actual Superwall API Key
+        SubscriptionManager.shared.configure(apiKey: "pk_pH9m0yDYMxyMNhrQd3qjE")
         
         return true
     }
@@ -157,7 +162,7 @@ struct ForceUpdateView: View {
                 
                 Button("تحديث الآن") {
                     // Open App Store
-                    if let url = URL(string: "itms-apps://itunes.apple.com/app/YOUR_APP_ID") {
+                    if let url = URL(string: "itms-apps://itunes.apple.com/app/id6756845059") {
                         UIApplication.shared.open(url)
                     }
                 }

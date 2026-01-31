@@ -194,6 +194,7 @@ class FirebaseManager: ObservableObject {
                 profileImageURL: data["profileImageURL"] as? String
             )
             profile.isAdmin = data["isAdmin"] as? Bool ?? false // NEW
+            profile.isPro = data["isPro"] as? Bool ?? false // NEW: Pro Flag
             completion(profile)
         }
     }
@@ -226,6 +227,17 @@ class FirebaseManager: ObservableObject {
         }
         db.collection("users").document(uid).updateData(data) { error in
             completion(error == nil)
+        }
+    }
+    
+    // NEW: Sync Pro Status
+    func updateProStatus(uid: String, isPro: Bool) {
+        db.collection("users").document(uid).updateData(["isPro": isPro]) { error in
+            if let error = error {
+                print("❌ Failed to sync Pro status: \(error)")
+            } else {
+                print("✅ Pro Status synced to Firestore: \(isPro)")
+            }
         }
     }
     
@@ -313,6 +325,7 @@ class FirebaseManager: ObservableObject {
         if let rating = comment.rating { data["rating"] = rating }
         if let url = comment.imageURL { data["imageURL"] = url }
         if comment.isAdmin { data["isAdmin"] = true } // NEW
+        if comment.isPro { data["isPro"] = true } // NEW: Pro status for badge
         
         let spotRef = db.collection("spots").document(spotId)
         
@@ -370,6 +383,7 @@ class FirebaseManager: ObservableObject {
                 )
                 comment.imageURL = data["imageURL"] as? String
                 comment.isAdmin = data["isAdmin"] as? Bool ?? false // NEW
+                comment.isPro = data["isPro"] as? Bool ?? false // NEW: Pro status for badge
                 return comment
             }
             completion(comments)

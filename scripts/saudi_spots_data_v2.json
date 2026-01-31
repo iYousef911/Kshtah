@@ -1,0 +1,122 @@
+[
+    {
+        "name": "جبال الشفا",
+        "location": "الطائف",
+        "type": "جبل",
+        "latitude": 21.103,
+        "longitude": 40.355,
+        "rating": 4.7,
+        "numberOfRatings": 230,
+        "imageURL": "https://loremflickr.com/800/600/saudi,mountain,taif?random=1"
+    },
+    {
+        "name": "شاطئ أملج",
+        "location": "أملج",
+        "type": "شاطئ",
+        "latitude": 25.030,
+        "longitude": 37.260,
+        "rating": 4.9,
+        "numberOfRatings": 180,
+        "imageURL": "https://loremflickr.com/800/600/saudi,beach,redsea?random=2"
+    },
+    {
+        "name": "وادي حنيفة",
+        "location": "الرياض",
+        "type": "وادي",
+        "latitude": 24.600,
+        "longitude": 46.550,
+        "rating": 4.5,
+        "numberOfRatings": 400,
+        "imageURL": "https://loremflickr.com/800/600/saudi,valley,river?random=3"
+    },
+    {
+        "name": "بحيرة الأصفر",
+        "location": "الأحساء",
+        "type": "بحيرة",
+        "latitude": 25.550,
+        "longitude": 49.783,
+        "rating": 4.6,
+        "numberOfRatings": 120,
+        "imageURL": "https://loremflickr.com/800/600/saudi,lake,desert?random=4"
+    },
+    {
+        "name": "جبال تنومة",
+        "location": "عسير",
+        "type": "جبل",
+        "latitude": 18.966,
+        "longitude": 42.150,
+        "rating": 4.8,
+        "numberOfRatings": 160,
+        "imageURL": "https://loremflickr.com/800/600/saudi,forest,mountain?random=5"
+    },
+    {
+        "name": "وادي البرداني",
+        "location": "بارق، عسير",
+        "type": "وادي",
+        "latitude": 18.800,
+        "longitude": 41.933,
+        "rating": 4.9,
+        "numberOfRatings": 90,
+        "imageURL": "https://loremflickr.com/800/600/saudi,green,valley?random=6"
+    },
+    {
+        "name": "الحجر (مدائن صالح)",
+        "location": "العلا",
+        "type": "تراث",
+        "latitude": 26.805,
+        "longitude": 37.954,
+        "rating": 5.0,
+        "numberOfRatings": 550,
+        "imageURL": "https://loremflickr.com/800/600/saudi,ruins,desert?random=7"
+    },
+    {
+        "name": "وادي القمر",
+        "location": "عسفان، جدة",
+        "type": "صحراء",
+        "latitude": 21.933,
+        "longitude": 39.350,
+        "rating": 4.4,
+        "numberOfRatings": 200,
+        "imageURL": "https://loremflickr.com/800/600/saudi,rock,formation?random=8"
+    },
+    {
+        "name": "بحيرة الخرارة",
+        "location": "الرياض",
+        "type": "بحيرة",
+        "latitude": 24.383,
+        "longitude": 46.217,
+        "rating": 4.3,
+        "numberOfRatings": 310,
+        "imageURL": "https://loremflickr.com/800/600/saudi,lake,dunes?random=9"
+    },
+    {
+        "name": "جزيرة النورس",
+        "location": "ينبع",
+        "type": "جزيرة",
+        "latitude": 23.950,
+        "longitude": 38.200,
+        "rating": 4.6,
+        "numberOfRatings": 150,
+        "imageURL": "https://loremflickr.com/800/600/saudi,island,sea?random=10"
+    },
+    {
+        "name": "روضة التنهات",
+        "location": "الرياض",
+        "type": "روضة",
+        "latitude": 26.066,
+        "longitude": 46.516,
+        "rating": 4.7,
+        "numberOfRatings": 280,
+        "imageURL": "https://loremflickr.com/800/600/saudi,garden,forest?random=11"
+    },
+    {
+        "name": "جبال اللوز (الشتاء)",
+        "location": "تبوك",
+        "type": "جبل",
+        "latitude": 28.650,
+        "longitude": 35.300,
+        "rating": 4.9,
+        "numberOfRatings": 420,
+        "imageURL": "https://loremflickr.com/800/600/saudi,snow,mountain?random=12"
+    }
+]

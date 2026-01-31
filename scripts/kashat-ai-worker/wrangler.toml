@@ -1,0 +1,7 @@
+name = "kashat-ai-worker"
+main = "src/worker.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+# You can set public variables here if needed
+# Secrets like OPENAI_API_KEY should be set via 'wrangler secret put OPENAI_API_KEY'

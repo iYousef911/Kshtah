@@ -1,0 +1,152 @@
+[
+  {
+    "name": "جبل السودة",
+    "location": "أبها",
+    "type": "جبل",
+    "latitude": 18.275,
+    "longitude": 42.361,
+    "rating": 4.9,
+    "numberOfRatings": 150,
+    "imageURL": "https://images.unsplash.com/photo-1589820296156-2454dd33c660?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "name": "وادي لجب",
+    "location": "الريث، جازان",
+    "type": "وادي",
+    "latitude": 17.593,
+    "longitude": 42.930,
+    "rating": 4.8,
+    "numberOfRatings": 210,
+    "imageURL": "https://images.unsplash.com/photo-1548588627-f978862b85e1?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "name": "حافة العالم",
+    "location": "الرياض",
+    "type": "صحراء",
+    "latitude": 24.943,
+    "longitude": 45.993,
+    "rating": 4.7,
+    "numberOfRatings": 320,
+    "imageURL": "https://images.unsplash.com/photo-1576487248805-cf45f6bcc67f?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "name": "جبل الفيل",
+    "location": "العلا",
+    "type": "جبل",
+    "latitude": 26.697,
+    "longitude": 37.994,
+    "rating": 4.9,
+    "numberOfRatings": 410,
+    "imageURL": "https://images.unsplash.com/photo-1545155708-301287e07eb2?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "name": "فوهة الوعبة",
+    "location": "الطائف",
+    "type": "فوهة بركانية",
+    "latitude": 22.905,
+    "longitude": 41.138,
+    "rating": 4.6,
+    "numberOfRatings": 180,
+    "imageURL": "https://images.unsplash.com/photo-1629215049588-e215e0a0f023?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "name": "وادي الديسة",
+    "location": "تبوك",
+    "type": "وادي",
+    "latitude": 27.604,
+    "longitude": 36.431,
+    "rating": 4.9,
+    "numberOfRatings": 140,
+    "imageURL": "https://images.unsplash.com/photo-1563722791-030f81d86d64?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "name": "جبل اللوز",
+    "location": "تبوك",
+    "type": "جبل",
+    "latitude": 28.665,
+    "longitude": 35.303,
+    "rating": 4.8,
+    "numberOfRatings": 250,
+    "imageURL": "https://images.unsplash.com/photo-1643194553229-3b6d2e616f73?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "name": "الغراميل",
+    "location": "العلا",
+    "type": "صحراء",
+    "latitude": 27.050,
+    "longitude": 38.150,
+    "rating": 4.9,
+    "numberOfRatings": 95,
+    "imageURL": "https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "name": "قرية رجال ألمع",
+    "location": "عسير",
+    "type": "قرية تراثية",
+    "latitude": 18.214,
+    "longitude": 42.302,
+    "rating": 4.8,
+    "numberOfRatings": 300,
+    "imageURL": "https://images.unsplash.com/photo-1580063673736-231a446c59b3?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "name": "النفود الكبير",
+    "location": "حائل",
+    "type": "كثبان رملية",
+    "latitude": 28.433,
+    "longitude": 41.000,
+    "rating": 4.6,
+    "numberOfRatings": 120,
+    "imageURL": "https://images.unsplash.com/photo-1549646193-e380f76903f0?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "name": "جزر فرسان",
+    "location": "جازان",
+    "type": "ساحل",
+    "latitude": 16.712,
+    "longitude": 42.115,
+    "rating": 4.7,
+    "numberOfRatings": 180,
+    "imageURL": "https://images.unsplash.com/photo-1598444318357-5509c313a373?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "name": "غابة رغدان",
+    "location": "الباحة",
+    "type": "غابة",
+    "latitude": 20.016,
+    "longitude": 41.455,
+    "rating": 4.5,
+    "numberOfRatings": 450,
+    "imageURL": "https://images.unsplash.com/photo-1516214104703-d870798883c5?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "name": "جبال فيفاء",
+    "location": "جازان",
+    "type": "جبل",
+    "latitude": 17.266,
+    "longitude": 43.116,
+    "rating": 4.8,
+    "numberOfRatings": 130,
+    "imageURL": "https://images.unsplash.com/photo-1595085353592-8077c5d79624?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "name": "شاطئ العقير",
+    "location": "الأحساء",
+    "type": "ساحل",
+    "latitude": 25.638,
+    "longitude": 50.218,
+    "rating": 4.4,
+    "numberOfRatings": 200,
+    "imageURL": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "name": "جبل القارة",
+    "location": "الأحساء",
+    "type": "كهوف",
+    "latitude": 25.412,
+    "longitude": 49.692,
+    "rating": 4.7,
+    "numberOfRatings": 350,
+    "imageURL": "https://images.unsplash.com/photo-1594917534720-3058863625f2?q=80&w=800&auto=format&fit=crop"
+  }
+]

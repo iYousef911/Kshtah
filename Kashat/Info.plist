@@ -24,5 +24,7 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>نحتاج إلى الكاميرا لتحديد اتجاه القبلة بتقنية الواقع المعزز</string>
 </dict>
 </plist>

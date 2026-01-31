@@ -25,11 +25,44 @@
 		D92EA43F2ED36E9800B61312 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = D92EA43E2ED36E9800B61312 /* FirebaseRemoteConfig */; };
 		D92EA4412ED36E9800B61312 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = D92EA4402ED36E9800B61312 /* FirebaseStorage */; };
 		D92EA4492ED3771C00B61312 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = D92EA4482ED3771C00B61312 /* GoogleService-Info.plist */; };
+		D96728C42EFADEAB00759F95 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = D96728C32EFADEAB00759F95 /* GoogleSignIn */; };
+		D96728C62EFADEAB00759F95 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = D96728C52EFADEAB00759F95 /* GoogleSignInSwift */; };
+		D9EF38872F1AA18300672131 /* OneSignalExtension in Frameworks */ = {isa = PBXBuildFile; productRef = D9EF38862F1AA18300672131 /* OneSignalExtension */; };
+		D9EF38892F1AA18300672131 /* OneSignalFramework in Frameworks */ = {isa = PBXBuildFile; productRef = D9EF38882F1AA18300672131 /* OneSignalFramework */; };
+		D9EF388B2F1AA18300672131 /* OneSignalInAppMessages in Frameworks */ = {isa = PBXBuildFile; productRef = D9EF388A2F1AA18300672131 /* OneSignalInAppMessages */; };
+		D9EF388D2F1AA18300672131 /* OneSignalLocation in Frameworks */ = {isa = PBXBuildFile; productRef = D9EF388C2F1AA18300672131 /* OneSignalLocation */; };
+		D9EF38992F1AA24A00672131 /* OneSignalNotificationServiceExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D9EF38922F1AA24A00672131 /* OneSignalNotificationServiceExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		D9F707F02F2E4F9B00BAC086 /* SuperwallKit in Frameworks */ = {isa = PBXBuildFile; productRef = D9F707EF2F2E4F9B00BAC086 /* SuperwallKit */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D9EF38972F1AA24A00672131 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D9ACBE792ED0FB3E001D8142 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D9EF38912F1AA24A00672131;
+			remoteInfo = OneSignalNotificationServiceExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D9EF389E2F1AA24A00672131 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				D9EF38992F1AA24A00672131 /* OneSignalNotificationServiceExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		D92EA4482ED3771C00B61312 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		D9ACBE812ED0FB3E001D8142 /* Kashat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Kashat.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D9EF38922F1AA24A00672131 /* OneSignalNotificationServiceExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OneSignalNotificationServiceExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -39,6 +72,13 @@
 				Info.plist,
 			);
 			target = D9ACBE802ED0FB3E001D8142 /* Kashat */;
+		};
+		D9EF389D2F1AA24A00672131 /* Exceptions for "OneSignalNotificationServiceExtension" folder in "OneSignalNotificationServiceExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D9EF38912F1AA24A00672131 /* OneSignalNotificationServiceExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -51,6 +91,14 @@
 			path = Kashat;
 			sourceTree = "<group>";
 		};
+		D9EF38932F1AA24A00672131 /* OneSignalNotificationServiceExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D9EF389D2F1AA24A00672131 /* Exceptions for "OneSignalNotificationServiceExtension" folder in "OneSignalNotificationServiceExtension" target */,
+			);
+			path = OneSignalNotificationServiceExtension;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +106,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D96728C62EFADEAB00759F95 /* GoogleSignInSwift in Frameworks */,
 				D92EA4232ED36E9800B61312 /* FirebaseAILogic in Frameworks */,
 				D92EA42B2ED36E9800B61312 /* FirebaseAuth in Frameworks */,
 				D92EA43D2ED36E9800B61312 /* FirebasePerformance in Frameworks */,
@@ -68,13 +117,26 @@
 				D92EA43F2ED36E9800B61312 /* FirebaseRemoteConfig in Frameworks */,
 				D92EA4252ED36E9800B61312 /* FirebaseAnalytics in Frameworks */,
 				D92EA42D2ED36E9800B61312 /* FirebaseCore in Frameworks */,
+				D9F707F02F2E4F9B00BAC086 /* SuperwallKit in Frameworks */,
 				D92EA42F2ED36E9800B61312 /* FirebaseCrashlytics in Frameworks */,
+				D9EF388B2F1AA18300672131 /* OneSignalInAppMessages in Frameworks */,
 				D92EA4312ED36E9800B61312 /* FirebaseDatabase in Frameworks */,
 				D92EA4412ED36E9800B61312 /* FirebaseStorage in Frameworks */,
 				D92EA4292ED36E9800B61312 /* FirebaseAppCheck in Frameworks */,
+				D9EF38872F1AA18300672131 /* OneSignalExtension in Frameworks */,
+				D9EF388D2F1AA18300672131 /* OneSignalLocation in Frameworks */,
+				D9EF38892F1AA18300672131 /* OneSignalFramework in Frameworks */,
 				D92EA4352ED36E9800B61312 /* FirebaseFunctions in Frameworks */,
 				D92EA4272ED36E9800B61312 /* FirebaseAnalyticsCore in Frameworks */,
 				D92EA4372ED36E9800B61312 /* FirebaseInAppMessaging-Beta in Frameworks */,
+				D96728C42EFADEAB00759F95 /* GoogleSignIn in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D9EF388F2F1AA24A00672131 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -86,6 +148,7 @@
 			children = (
 				D92EA4482ED3771C00B61312 /* GoogleService-Info.plist */,
 				D9ACBE832ED0FB3E001D8142 /* Kashat */,
+				D9EF38932F1AA24A00672131 /* OneSignalNotificationServiceExtension */,
 				D9ACBE822ED0FB3E001D8142 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -94,6 +157,7 @@
 			isa = PBXGroup;
 			children = (
 				D9ACBE812ED0FB3E001D8142 /* Kashat.app */,
+				D9EF38922F1AA24A00672131 /* OneSignalNotificationServiceExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -108,10 +172,12 @@
 				D9ACBE7D2ED0FB3E001D8142 /* Sources */,
 				D9ACBE7E2ED0FB3E001D8142 /* Frameworks */,
 				D9ACBE7F2ED0FB3E001D8142 /* Resources */,
+				D9EF389E2F1AA24A00672131 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				D9EF38982F1AA24A00672131 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				D9ACBE832ED0FB3E001D8142 /* Kashat */,
@@ -135,10 +201,39 @@
 				D92EA43C2ED36E9800B61312 /* FirebasePerformance */,
 				D92EA43E2ED36E9800B61312 /* FirebaseRemoteConfig */,
 				D92EA4402ED36E9800B61312 /* FirebaseStorage */,
+				D96728C32EFADEAB00759F95 /* GoogleSignIn */,
+				D96728C52EFADEAB00759F95 /* GoogleSignInSwift */,
+				D9EF38862F1AA18300672131 /* OneSignalExtension */,
+				D9EF38882F1AA18300672131 /* OneSignalFramework */,
+				D9EF388A2F1AA18300672131 /* OneSignalInAppMessages */,
+				D9EF388C2F1AA18300672131 /* OneSignalLocation */,
+				D9F707EF2F2E4F9B00BAC086 /* SuperwallKit */,
 			);
 			productName = Kashat;
 			productReference = D9ACBE812ED0FB3E001D8142 /* Kashat.app */;
 			productType = "com.apple.product-type.application";
+		};
+		D9EF38912F1AA24A00672131 /* OneSignalNotificationServiceExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D9EF389A2F1AA24A00672131 /* Build configuration list for PBXNativeTarget "OneSignalNotificationServiceExtension" */;
+			buildPhases = (
+				D9EF388E2F1AA24A00672131 /* Sources */,
+				D9EF388F2F1AA24A00672131 /* Frameworks */,
+				D9EF38902F1AA24A00672131 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D9EF38932F1AA24A00672131 /* OneSignalNotificationServiceExtension */,
+			);
+			name = OneSignalNotificationServiceExtension;
+			packageProductDependencies = (
+			);
+			productName = OneSignalNotificationServiceExtension;
+			productReference = D9EF38922F1AA24A00672131 /* OneSignalNotificationServiceExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -147,11 +242,14 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2610;
+				LastSwiftUpdateCheck = 2620;
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					D9ACBE802ED0FB3E001D8142 = {
 						CreatedOnToolsVersion = 26.1.1;
+					};
+					D9EF38912F1AA24A00672131 = {
+						CreatedOnToolsVersion = 26.2;
 					};
 				};
 			};
@@ -167,6 +265,9 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				D92EA41F2ED36E9800B61312 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				D96728C22EFADEAB00759F95 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				D9EF38852F1AA18300672131 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */,
+				D9F707EE2F2E4F9B00BAC086 /* XCRemoteSwiftPackageReference "Superwall-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D9ACBE822ED0FB3E001D8142 /* Products */;
@@ -174,6 +275,7 @@
 			projectRoot = "";
 			targets = (
 				D9ACBE802ED0FB3E001D8142 /* Kashat */,
+				D9EF38912F1AA24A00672131 /* OneSignalNotificationServiceExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -187,6 +289,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D9EF38902F1AA24A00672131 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -197,7 +306,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D9EF388E2F1AA24A00672131 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D9EF38982F1AA24A00672131 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D9EF38912F1AA24A00672131 /* OneSignalNotificationServiceExtension */;
+			targetProxy = D9EF38972F1AA24A00672131 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		D9ACBE8A2ED0FB3F001D8142 /* Debug */ = {
@@ -346,10 +470,12 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Kashat/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Kshtah - Camping Guide";
+				INFOPLIST_KEY_CFBundleDisplayName = "Kashat | كشتات";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Kashat needs camera access to display the AR Qibla compass.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Kashat needs your location to show nearby camping spots and Qibla direction.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "نحتاج الوصول لـ FaceID لتأمين التطبيق.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "نحتاج الوصول لموقعك لتحديد اتجاه القبلة بدقة.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "نحتاج الوصول لموقعك لتحديد اتجاه القبلة بدقة.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -364,7 +490,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.yatechno.Kashat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -407,10 +533,12 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Kashat/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Kshtah - Camping Guide";
+				INFOPLIST_KEY_CFBundleDisplayName = "Kashat | كشتات";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Kashat needs camera access to display the AR Qibla compass.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Kashat needs your location to show nearby camping spots and Qibla direction.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "نحتاج الوصول لـ FaceID لتأمين التطبيق.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "نحتاج الوصول لموقعك لتحديد اتجاه القبلة بدقة.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "نحتاج الوصول لموقعك لتحديد اتجاه القبلة بدقة.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -425,7 +553,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.yatechno.Kashat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -439,6 +567,69 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 				XROS_DEPLOYMENT_TARGET = 2.0;
+			};
+			name = Release;
+		};
+		D9EF389B2F1AA24A00672131 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = OneSignalNotificationServiceExtension/OneSignalNotificationServiceExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RGSEF8E3RM;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OneSignalNotificationServiceExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = OneSignalNotificationServiceExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yatechno.Kashat.OneSignalNotificationServiceExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D9EF389C2F1AA24A00672131 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = OneSignalNotificationServiceExtension/OneSignalNotificationServiceExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RGSEF8E3RM;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OneSignalNotificationServiceExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = OneSignalNotificationServiceExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yatechno.Kashat.OneSignalNotificationServiceExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
@@ -463,6 +654,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		D9EF389A2F1AA24A00672131 /* Build configuration list for PBXNativeTarget "OneSignalNotificationServiceExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D9EF389B2F1AA24A00672131 /* Debug */,
+				D9EF389C2F1AA24A00672131 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
@@ -472,6 +672,30 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 12.6.0;
+			};
+		};
+		D96728C22EFADEAB00759F95 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
+		D9EF38852F1AA18300672131 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/OneSignal/OneSignal-iOS-SDK";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.2.16;
+			};
+		};
+		D9F707EE2F2E4F9B00BAC086 /* XCRemoteSwiftPackageReference "Superwall-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/superwall-me/Superwall-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.12.9;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -561,6 +785,41 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D92EA41F2ED36E9800B61312 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseStorage;
+		};
+		D96728C32EFADEAB00759F95 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D96728C22EFADEAB00759F95 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		D96728C52EFADEAB00759F95 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D96728C22EFADEAB00759F95 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+		D9EF38862F1AA18300672131 /* OneSignalExtension */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D9EF38852F1AA18300672131 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */;
+			productName = OneSignalExtension;
+		};
+		D9EF38882F1AA18300672131 /* OneSignalFramework */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D9EF38852F1AA18300672131 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */;
+			productName = OneSignalFramework;
+		};
+		D9EF388A2F1AA18300672131 /* OneSignalInAppMessages */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D9EF38852F1AA18300672131 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */;
+			productName = OneSignalInAppMessages;
+		};
+		D9EF388C2F1AA18300672131 /* OneSignalLocation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D9EF38852F1AA18300672131 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */;
+			productName = OneSignalLocation;
+		};
+		D9F707EF2F2E4F9B00BAC086 /* SuperwallKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D9F707EE2F2E4F9B00BAC086 /* XCRemoteSwiftPackageReference "Superwall-iOS" */;
+			productName = SuperwallKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

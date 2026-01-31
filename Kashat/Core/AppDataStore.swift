@@ -356,6 +356,7 @@ class AppDataStore: ObservableObject {
             )
             newComment.imageURL = url
             newComment.isAdmin = self.userProfile?.isAdmin ?? false // NEW
+            newComment.isPro = self.userProfile?.isPro ?? SubscriptionManager.shared.isPro // NEW: Pro status
             
             DispatchQueue.main.async {
                 if self.comments[spotId] != nil {
@@ -414,7 +415,10 @@ class AppDataStore: ObservableObject {
     // MARK: - AI Recommendations
     func fetchRecommendations() {
         Task {
-            let recs = await RecommendationManager.shared.getWeekendRecommendations(spots: self.spots)
+            // Use current user location from LocationManager
+            let userLoc = LocationManager.shared.userLocation
+            let recs = await RecommendationManager.shared.getWeekendRecommendations(spots: self.spots, userLocation: userLoc)
+            
             DispatchQueue.main.async {
                 withAnimation {
                     self.recommendedSpots = recs

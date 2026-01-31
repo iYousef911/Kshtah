@@ -1,0 +1,112 @@
+[
+    {
+        "name": "شاطئ سيلين",
+        "location": "مسعيد",
+        "type": "شاطئ",
+        "latitude": 24.852,
+        "longitude": 51.509,
+        "rating": 4.8,
+        "numberOfRatings": 1200,
+        "imageURL": "https://loremflickr.com/800/600/qatar,beach,sand?random=1"
+    },
+    {
+        "name": "العديد (البحر الداخلي)",
+        "location": "الوكرة",
+        "type": "صحراء",
+        "latitude": 24.579,
+        "longitude": 51.366,
+        "rating": 4.9,
+        "numberOfRatings": 850,
+        "imageURL": "https://loremflickr.com/800/600/qatar,desert,dunes?random=2"
+    },
+    {
+        "name": "شاطئ فويرط",
+        "location": "الشمال",
+        "type": "شاطئ",
+        "latitude": 26.062,
+        "longitude": 51.357,
+        "rating": 4.7,
+        "numberOfRatings": 500,
+        "imageURL": "https://loremflickr.com/800/600/qatar,beach,turquoise?random=3"
+    },
+    {
+        "name": "زكريت (رأس بروق)",
+        "location": "الريان",
+        "type": "صحراء",
+        "latitude": 25.468,
+        "longitude": 50.874,
+        "rating": 4.6,
+        "numberOfRatings": 320,
+        "imageURL": "https://loremflickr.com/800/600/qatar,rock,desert?random=4"
+    },
+    {
+        "name": "جزيرة بن غنام (الجزيرة الأرجوانية)",
+        "location": "الخور",
+        "type": "جزيرة",
+        "latitude": 25.685,
+        "longitude": 51.560,
+        "rating": 4.5,
+        "numberOfRatings": 410,
+        "imageURL": "https://loremflickr.com/800/600/qatar,mangrove,island?random=5"
+    },
+    {
+        "name": "خليج المجرة",
+        "location": "الشمال",
+        "type": "صحراء",
+        "latitude": 25.880,
+        "longitude": 50.972,
+        "rating": 4.8,
+        "numberOfRatings": 150,
+        "imageURL": "https://loremflickr.com/800/600/qatar,night,stars?random=6"
+    },
+    {
+        "name": "شاطئ دخان",
+        "location": "الريان",
+        "type": "شاطئ",
+        "latitude": 25.414,
+        "longitude": 50.759,
+        "rating": 4.4,
+        "numberOfRatings": 600,
+        "imageURL": "https://loremflickr.com/800/600/qatar,beach,sunset?random=7"
+    },
+    {
+        "name": "شاطئ الغارية",
+        "location": "الشمال",
+        "type": "شاطئ",
+        "latitude": 26.074,
+        "longitude": 51.359,
+        "rating": 4.3,
+        "numberOfRatings": 280,
+        "imageURL": "https://loremflickr.com/800/600/qatar,resort,beach?random=8"
+    },
+    {
+        "name": "شاطئ مارونا",
+        "location": "الشمال",
+        "type": "شاطئ",
+        "latitude": 25.963,
+        "longitude": 51.365,
+        "rating": 4.6,
+        "numberOfRatings": 190,
+        "imageURL": "https://loremflickr.com/800/600/qatar,sand,sea?random=9"
+    },
+    {
+        "name": "مخيم أم باب",
+        "location": "الريان",
+        "type": "شاطئ",
+        "latitude": 25.208,
+        "longitude": 50.768,
+        "rating": 4.5,
+        "numberOfRatings": 220,
+        "imageURL": "https://loremflickr.com/800/600/qatar,palm,beach?random=10"
+    },
+    {
+        "name": "محمية الذخيرة",
+        "location": "الخور",
+        "type": "محمية",
+        "latitude": 25.739,
+        "longitude": 51.548,
+        "rating": 4.7,
+        "numberOfRatings": 350,
+        "imageURL": "https://loremflickr.com/800/600/qatar,mangroves,kayak?random=11"
+    }
+]
