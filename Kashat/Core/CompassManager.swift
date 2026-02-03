@@ -37,8 +37,8 @@ class CompassManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             // Use True North if valid (positive value), otherwise Magnetic North
             let headingToUse = newHeading.trueHeading >= 0 ? newHeading.trueHeading : newHeading.magneticHeading
             
-            // Smooth animation by taking the shortest path
-            self.heading = -headingToUse
+            // Store standard positive heading
+            self.heading = headingToUse
         }
     }
     

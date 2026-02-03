@@ -34,6 +34,7 @@ class AppDataStore: ObservableObject {
     @Published var homeTitleText: String = "وين وجهتك الجاية؟" // NEW: A/B Test Prop
     @Published var showDiscountBanner: Bool = false // NEW: Discount A/B
     @Published var primaryThemeColor: String = "blue" // NEW: Color A/B
+    @Published var currentTheme: AppTheme = .foundingDay // NEW: Event Theme
     @Published var discountCode: String = "KASHAT10" // NEW: Dynamic Discount Code
     
     // Production Configs
@@ -48,6 +49,9 @@ class AppDataStore: ObservableObject {
     
     // Computed Color Property for A/B Test
     var appColor: Color {
+        if currentTheme == .foundingDay {
+            return currentTheme.primaryColor
+        }
         return primaryThemeColor == "green" ? .green : .blue
     }
     
@@ -80,7 +84,7 @@ class AppDataStore: ObservableObject {
         fetchCategories() // NEW: Dynamic Categories
         
         // 3. Fetch Remote Config
-        firebase.fetchRemoteConfig { [weak self] (marketplace, wallet, homeTitle, showBanner, themeColor, code, maintenance, email, minVersion, fee, btnStyle, payMethod) in
+        firebase.fetchRemoteConfig { [weak self] (marketplace, wallet, homeTitle, showBanner, themeColor, code, maintenance, email, minVersion, fee, btnStyle, payMethod, isFoundingDay) in
             self?.isMarketplaceEnabled = marketplace
             self?.isWalletEnabled = wallet
             self?.homeTitleText = homeTitle
@@ -95,6 +99,13 @@ class AppDataStore: ObservableObject {
             self?.serviceFeePercentage = fee
             self?.rentButtonStyle = btnStyle
             self?.defaultPaymentMethod = payMethod
+            
+            // Activation of Founding Day Theme via Remote Config
+            if isFoundingDay {
+                self?.currentTheme = .foundingDay
+            } else {
+                self?.currentTheme = .standard
+            }
         }
     }
     

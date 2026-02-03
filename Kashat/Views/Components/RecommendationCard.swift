@@ -34,6 +34,21 @@ struct RecommendationCard: View {
             }
             .frame(width: 250, height: 320)
             .clipped()
+            .blur(radius: recommendation.spot.isProOnly ? 5 : 0) // Blur for Pro exclusive
+            .overlay {
+                if recommendation.spot.isProOnly {
+                    ZStack {
+                        Color.black.opacity(0.4)
+                        VStack(spacing: 8) {
+                            Image(systemName: "lock.fill")
+                                .font(.title)
+                            Text(settings.t("حصري لـ PRO"))
+                                .font(.caption.bold())
+                        }
+                        .foregroundStyle(.white)
+                    }
+                }
+            }
             
             // Gradient Overlay
             LinearGradient(colors: [.clear, .black.opacity(0.8)], startPoint: .top, endPoint: .bottom)

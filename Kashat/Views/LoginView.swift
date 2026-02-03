@@ -14,7 +14,9 @@ internal import Combine
 
 struct LoginView: View {
     @ObservedObject var firebase = FirebaseManager.shared
-    @State private var phoneNumber = "+966"
+    @State private var phoneNumber = ""
+    @State private var selectedCountry: Country = Country.allCountries.first(where: { $0.isoCode == "SA" }) ?? Country.allCountries[0]
+    @State private var showCountryPicker = false
     @State private var otpCode = ""
     @State private var isProcessing = false
     @State private var showOtpField = false
@@ -77,6 +79,7 @@ struct LoginView: View {
         .animation(.spring, value: showError)
         .sheet(isPresented: $showTerms) { LegalView(title: "شروط الاستخدام", content: LegalData.termsOfService) }
         .sheet(isPresented: $showPrivacy) { LegalView(title: "سياسة الخصوصية", content: LegalData.privacyPolicy) }
+        .sheet(isPresented: $showCountryPicker) { CountryPickerView(selectedCountry: $selectedCountry) }
     }
     
     @ViewBuilder
@@ -200,19 +203,21 @@ struct LoginView: View {
             
             // Split Inputs
             HStack(spacing: 12) {
-                // Country Code Box
-                HStack(spacing: 4) {
-                    Text("🇸🇦")
-                    Text("+966")
-                        .fontWeight(.semibold)
-                        .foregroundStyle(Color.white)
-//                        .scaleEffect(x: -1, y: 1) // Mirror for RTL layout consistency if needed, but numbers are LTR usually. 
-                        // Actually, purely visual +966 is fine without mirroring if alignment is correct.
-                        // Let's keep it simple.
+                // Country Code Selection
+                Button(action: { showCountryPicker = true }) {
+                    HStack(spacing: 8) {
+                        Text(selectedCountry.flag)
+                        Text(selectedCountry.dialCode)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(Color.white)
+                        Image(systemName: "chevron.down")
+                            .font(.caption2)
+                            .foregroundStyle(Color.white.opacity(0.6))
+                    }
+                    .padding()
+                    .frame(height: 55)
+                    .glassEffect(GlassStyle.regular, in: RoundedRectangle(cornerRadius: 16))
                 }
-                .padding()
-                .frame(height: 55)
-                .glassEffect(GlassStyle.regular, in: RoundedRectangle(cornerRadius: 16))
                 
                 // Phone Number Box
                 TextField("55...", text: $phoneNumber)
@@ -251,7 +256,7 @@ struct LoginView: View {
     var otpInputView: some View {
         VStack(spacing: 20) {
             Text("التحقق من الرمز").font(.headline).foregroundStyle(Color.white)
-            Text("تم إرسال الرمز إلى \(phoneNumber)").font(.caption).foregroundStyle(Color.white.opacity(0.7))
+            Text("تم إرسال الرمز إلى \(selectedCountry.dialCode) \(phoneNumber)").font(.caption).foregroundStyle(Color.white.opacity(0.7))
             TextField("XXXXXX", text: $otpCode)
                 .keyboardType(.numberPad)
                 .multilineTextAlignment(.center)
@@ -271,7 +276,8 @@ struct LoginView: View {
     
     func sendCode() {
         isProcessing = true; showError = false
-        firebase.startPhoneAuth(phoneNumber: phoneNumber) { error in isProcessing = false; if let error = error { errorMessage = error.localizedDescription; showError = true } else { showOtpField = true } }
+        let fullPhoneNumber = "\(selectedCountry.dialCode)\(phoneNumber)"
+        firebase.startPhoneAuth(phoneNumber: fullPhoneNumber) { error in isProcessing = false; if let error = error { errorMessage = error.localizedDescription; showError = true } else { showOtpField = true } }
     }
     
     func verifyOtp() {

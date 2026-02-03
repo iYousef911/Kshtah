@@ -121,14 +121,14 @@ struct ARQiblaView: View {
                         .foregroundStyle(Color.gold)
                         .offset(y: -110)
                 }
-                .rotationEffect(.degrees(-compass.heading + compass.qiblaDirection))
+                .rotationEffect(.degrees(compass.qiblaDirection))
                 
                 // Center Pivot
                 Circle()
                     .fill(Color.white)
                     .frame(width: 10, height: 10)
             }
-            .rotationEffect(.degrees(compass.heading))
+            .rotationEffect(.degrees(-compass.heading))
             .animation(.easeOut(duration: 0.3), value: compass.heading)
         }
     }

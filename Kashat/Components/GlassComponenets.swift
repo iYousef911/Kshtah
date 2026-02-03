@@ -10,6 +10,7 @@ internal import Combine
 
 // MARK: - Liquid Background View (Theme Engine)
 struct LiquidBackgroundView: View {
+    @EnvironmentObject var theme: ThemeManager
     @State private var time: Float = 0.0
     let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
     
@@ -25,6 +26,25 @@ struct LiquidBackgroundView: View {
         ]
     }
     
+    var themeColors: [Color] {
+        let base = theme.currentTheme.gradientColors
+        if theme.currentTheme == .foundingDay {
+            return [
+                base[0], base[1], base[0],
+                base[2].opacity(0.15), base[0].opacity(0.3), base[2].opacity(0.15),
+                base[1].opacity(0.8), base[0], base[1].opacity(0.8)
+            ]
+        } else {
+            return [
+                base[0], base[1], base[0],
+                Color(red: 0.25, green: 0.2, blue: 0.1).opacity(0.4),
+                Color(red: 0.05, green: 0.15, blue: 0.2).opacity(0.3),
+                Color(red: 0.25, green: 0.2, blue: 0.1).opacity(0.4),
+                base[0], base[1], base[0]
+            ]
+        }
+    }
+    
     var body: some View {
         Group {
             if #available(iOS 18.0, *) {
@@ -32,19 +52,7 @@ struct LiquidBackgroundView: View {
                     width: 3,
                     height: 3,
                     points: animatedMeshPoints,
-                    colors: [
-                        // Row 1: Deep Night Sky (Top)
-                        .black, Color(red: 0.05, green: 0.08, blue: 0.12), .black,
-                        
-                        // Row 2: The "Liquid" Flow - Subtle Gold & Dark Teal
-                        // Professional Palette: Bronze/Gold mixed with Deep Teal
-                        Color(red: 0.25, green: 0.2, blue: 0.1).opacity(0.4), // Subtle Gold/Sand
-                        Color(red: 0.05, green: 0.15, blue: 0.2).opacity(0.3), // Deep Teal
-                        Color(red: 0.25, green: 0.2, blue: 0.1).opacity(0.4), // Subtle Gold/Sand
-                        
-                        // Row 3: Deep Ground (Bottom)
-                        .black, Color(red: 0.05, green: 0.05, blue: 0.08), .black
-                    ]
+                    colors: themeColors
                 )
                 .ignoresSafeArea()
                 .onReceive(timer) { _ in time += 0.05 }
@@ -122,7 +130,14 @@ struct GlassSpotCard: View {
             }
             
             VStack(alignment: .leading, spacing: 4) {
-                Text(spot.name).font(.headline).foregroundStyle(Color.white)
+                HStack(spacing: 4) {
+                    Text(spot.name).font(.headline).foregroundStyle(Color.white)
+                    if spot.isProOnly {
+                        Image(systemName: "crown.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.yellow)
+                    }
+                }
                 Text(spot.location).font(.caption).foregroundStyle(Color.white.opacity(0.6))
                 HStack {
                     // Update Star color to match new Gold theme

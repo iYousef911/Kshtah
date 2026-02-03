@@ -74,6 +74,7 @@ struct KashatApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var store = AppDataStore()
     @StateObject private var settings = SettingsManager()
+    @StateObject private var theme = ThemeManager()
     
     @AppStorage("hasSeenOnboarding") var hasSeenOnboarding: Bool = false
     @State private var showSplash = true
@@ -99,14 +100,15 @@ struct KashatApp: App {
                         Group {
                             if !hasSeenOnboarding { OnboardingView() } else { ContentView() }
                         }
-                        .environmentObject(store)
-                        .environmentObject(settings)
                         .environment(\.layoutDirection, settings.layoutDirection)
                         .environment(\.locale, settings.locale)
                         .onOpenURL { url in if Auth.auth().canHandle(url) {} }
                     }
                 }
             }
+            .environmentObject(store)
+            .environmentObject(settings)
+            .environmentObject(theme)
             .preferredColorScheme(.dark)
         }
     }

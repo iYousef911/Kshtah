@@ -69,13 +69,14 @@ class FirebaseManager: ObservableObject {
             // NEW: A/B Experiments (Round 2)
             "service_fee_percentage": 0.15 as NSObject, // Experiment 4
             "rent_button_style": "blue_capsule" as NSObject, // Experiment 5
-            "default_payment_method": "apple_pay" as NSObject // Experiment 6
+            "default_payment_method": "apple_pay" as NSObject, // Experiment 6
+            "is_founding_day_theme_enabled": false as NSObject // Saudi Founding Day Theme
         ]
         remoteConfig.setDefaults(defaults)
     }
     
     // Updated to return all config values
-    func fetchRemoteConfig(completion: @escaping (Bool, Bool, String, Bool, String, String, Bool, String, String, Double, String, String) -> Void) {
+    func fetchRemoteConfig(completion: @escaping (Bool, Bool, String, Bool, String, String, Bool, String, String, Double, String, String, Bool) -> Void) {
         remoteConfig.fetch { [weak self] status, error in
             if status == .success {
                 print("Config fetched!")
@@ -96,8 +97,11 @@ class FirebaseManager: ObservableObject {
                     let btnStyle = self?.remoteConfig["rent_button_style"].stringValue ?? "blue_capsule"
                     let payMethod = self?.remoteConfig["default_payment_method"].stringValue ?? "apple_pay"
                     
+                    // Saudi Founding Day
+                    let isFoundingDay = self?.remoteConfig["is_founding_day_theme_enabled"].boolValue ?? false
+                    
                     DispatchQueue.main.async {
-                        completion(marketplace, wallet, homeTitle, showBanner, themeColor, discountCode, maintenance, email, minVersion, fee, btnStyle, payMethod)
+                        completion(marketplace, wallet, homeTitle, showBanner, themeColor, discountCode, maintenance, email, minVersion, fee, btnStyle, payMethod, isFoundingDay)
                     }
                 }
             } else {
@@ -118,8 +122,9 @@ class FirebaseManager: ObservableObject {
                     let fee = self?.remoteConfig["service_fee_percentage"].numberValue.doubleValue ?? 0.15
                     let btnStyle = self?.remoteConfig["rent_button_style"].stringValue ?? "blue_capsule"
                     let payMethod = self?.remoteConfig["default_payment_method"].stringValue ?? "apple_pay"
+                    let isFoundingDay = self?.remoteConfig["is_founding_day_theme_enabled"].boolValue ?? false
                     
-                    completion(marketplace, wallet, homeTitle, showBanner, themeColor, discountCode, maintenance, email, minVersion, fee, btnStyle, payMethod)
+                    completion(marketplace, wallet, homeTitle, showBanner, themeColor, discountCode, maintenance, email, minVersion, fee, btnStyle, payMethod, isFoundingDay)
                 }
             }
         }
@@ -506,7 +511,10 @@ class FirebaseManager: ObservableObject {
                     rating: data["rating"] as? Double ?? 0.0,
                     numberOfRatings: data["numberOfRatings"] as? Int ?? 0,
                     coordinate: CLLocationCoordinate2D(latitude: lat, longitude: long),
-                    imageURL: data["imageURL"] as? String
+                    imageURL: data["imageURL"] as? String,
+                    isProOnly: data["isProOnly"] as? Bool ?? false,
+                    aiInsight: data["aiInsight"] as? String,
+                    bortleScale: data["bortleScale"] as? Int
                 )
             }
             completion(spots)
@@ -524,6 +532,9 @@ class FirebaseManager: ObservableObject {
             "longitude": spot.coordinate.longitude
         ]
         if let url = spot.imageURL { data["imageURL"] = url }
+        if spot.isProOnly { data["isProOnly"] = true }
+        if let insight = spot.aiInsight { data["aiInsight"] = insight }
+        if let bortle = spot.bortleScale { data["bortleScale"] = bortle }
         
         db.collection("spots").document(spot.id.uuidString).setData(data)
     }

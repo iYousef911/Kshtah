@@ -15,6 +15,7 @@ struct HomeFeedView: View {
     @State private var showCompass = false
     @State private var showNotifications = false // NEW State
     @State private var showDiscountAlert = false // NEW: Discount Alert State
+    @State private var showConvoy = false // NEW: For Pro Convoy
     @State private var selectedCategory = "الكل"
 
     // ... (rest of code)
@@ -48,12 +49,16 @@ struct HomeFeedView: View {
                         showNotifications: $showNotifications,
                         showDiscountAlert: $showDiscountAlert,
                         selectedCategory: $selectedCategory,
-                        selectedSpot: $selectedSpot
+                        selectedSpot: $selectedSpot,
+                        showConvoy: $showConvoy
                     )
                     .sheet(item: $selectedSpot) { spot in // Sheet only on iPhone
                         SpotDetailView(spot: spot)
                             .presentationDetents([.large])
                             .presentationDragIndicator(.visible)
+                    }
+                    .sheet(isPresented: $showConvoy) {
+                        ConvoyDashboard()
                     }
                 }
             } else {
@@ -65,10 +70,14 @@ struct HomeFeedView: View {
                         showNotifications: $showNotifications,
                         showDiscountAlert: $showDiscountAlert,
                         selectedCategory: $selectedCategory,
-                        selectedSpot: $selectedSpot
+                        selectedSpot: $selectedSpot,
+                        showConvoy: $showConvoy
                     )
                     .navigationTitle("Home")
                     .navigationBarHidden(true)
+                    .sheet(isPresented: $showConvoy) {
+                        ConvoyDashboard()
+                    }
                 } detail: {
                     ZStack {
                         LiquidBackgroundView()
@@ -113,6 +122,7 @@ struct HomeFeedView: View {
 struct HomeFeedContent: View {
     @EnvironmentObject var store: AppDataStore
     @EnvironmentObject var settings: SettingsManager
+    @EnvironmentObject var theme: ThemeManager
     
     @Binding var showInbox: Bool
     @Binding var showCompass: Bool
@@ -120,6 +130,7 @@ struct HomeFeedContent: View {
     @Binding var showDiscountAlert: Bool
     @Binding var selectedCategory: String
     @Binding var selectedSpot: CampingSpot?
+    @Binding var showConvoy: Bool // NEW: Binding
     
     // Live User Name
     var userName: String {
@@ -149,9 +160,16 @@ struct HomeFeedContent: View {
                             Text(settings.t("مرحباً،") + " \(userName) 👋")
                                 .font(.title2.weight(.bold))
                                 .foregroundStyle(Color.white)
+                            
+                            if store.currentTheme == .foundingDay {
+                                FoundingDayBadge()
+                                    .scaleEffect(0.6)
+                                    .frame(width: 30, height: 30)
+                            }
+                            
                             if store.userProfile?.isAdmin == true {
                                 Image(systemName: "checkmark.shield.fill")
-                                    .foregroundStyle(Color.blue)
+                                    .foregroundStyle(store.appColor)
                             }
                         }
                         Text(settings.t(store.homeTitleText))
@@ -179,6 +197,15 @@ struct HomeFeedContent: View {
                             .padding(12)
                             .glassEffect(GlassStyle.regular.interactive(), in: Circle())
                             .foregroundStyle(Color.white)
+                    }
+                    
+                    if store.userProfile?.isPro ?? false {
+                        Button(action: { showConvoy = true }) {
+                            Image(systemName: "car.2.fill")
+                                .padding(12)
+                                .glassEffect(GlassStyle.regular.interactive(), in: Circle())
+                                .foregroundStyle(Color.white)
+                        }
                     }
                 }
                 .padding(.horizontal)
@@ -332,8 +359,8 @@ struct HomeFeedContent: View {
             store.fetchCategories() // NEW: Refresh categories
         }
         .sheet(isPresented: $showInbox) { InboxView().presentationDetents([.large]) }
-        .sheet(isPresented: $showNotifications) { NotificationsView().presentationDetents([.medium]) }
-        .fullScreenCover(isPresented: $showCompass) { ARQiblaView() }
+        .sheet(isPresented: $showNotifications) { NotificationsView().presentationDetents([.medium]).environmentObject(store).environmentObject(settings).environmentObject(theme) }
+        .fullScreenCover(isPresented: $showCompass) { ARQiblaView().environmentObject(store).environmentObject(settings).environmentObject(theme) }
         .alert(settings.t("نسخنا لك كود الخصم! 🎁"), isPresented: $showDiscountAlert) {
             Button(settings.t("شكراً"), role: .cancel) { }
         } message: {
