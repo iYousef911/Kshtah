@@ -3,8 +3,16 @@ import SwiftUI
 struct StargazingInsightView: View {
     let bortleScale: Int?
     let isPro: Bool
+    let moonOverride: MoonPhase? // NEW: For precision from WeatherKit
     @EnvironmentObject var settings: SettingsManager
-    @State private var moon = MoonPhaseService.shared.getMoonPhase()
+    @State private var moon: MoonPhase
+    
+    init(bortleScale: Int?, isPro: Bool, moonOverride: MoonPhase? = nil) {
+        self.bortleScale = bortleScale
+        self.isPro = isPro
+        self.moonOverride = moonOverride
+        self._moon = State(initialValue: moonOverride ?? MoonPhaseService.shared.getMoonPhase())
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -85,14 +93,19 @@ struct StargazingInsightView: View {
     private var darkSkyVerdict: String {
         guard let scale = bortleScale else { return "ظروف الرصد غير متوفرة." }
         
+        // If moon is too bright (> 60% illumination), it ruins stargazing regardless of Bortle
+        if moon.illumination > 60 {
+            return "القمر ساطع اليوم (\(moon.illumination)%). قد يصعب رؤية النجوم البعيدة حتى في المناطق المظلمة."
+        }
+        
         let moonGood = moon.isDark
         
         if scale <= 3 && moonGood {
-            return "سماء مظلمة جداً! مثالية لتصوير المجرة اليوم. 🌌"
+            return "سماء مظلمة جداً ومثالية! فرصة رائعة لتصوير المجرة اليوم. 🌌"
         } else if scale <= 5 {
-            return "ظروف رصد جيدة. يمكن رؤية العديد من النجوم."
+            return "ظروف رصد جيدة. يمكن رؤية العديد من النجوم بوضوح."
         } else {
-            return "تلوث ضوئي مرتفع. قد تصعب رؤية الأجرام البعيدة."
+            return "تلوث ضوئي مرتفع في هذه المنطقة. قد تصعب رؤية الأجرام البعيدة."
         }
     }
 }

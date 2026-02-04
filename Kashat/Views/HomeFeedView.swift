@@ -16,6 +16,7 @@ struct HomeFeedView: View {
     @State private var showNotifications = false // NEW State
     @State private var showDiscountAlert = false // NEW: Discount Alert State
     @State private var showConvoy = false // NEW: For Pro Convoy
+    @State private var showChatDashboard = false // NEW: Group Chat
     @State private var selectedCategory = "الكل"
 
     // ... (rest of code)
@@ -50,7 +51,8 @@ struct HomeFeedView: View {
                         showDiscountAlert: $showDiscountAlert,
                         selectedCategory: $selectedCategory,
                         selectedSpot: $selectedSpot,
-                        showConvoy: $showConvoy
+                        showConvoy: $showConvoy,
+                        showChatDashboard: $showChatDashboard
                     )
                     .sheet(item: $selectedSpot) { spot in // Sheet only on iPhone
                         SpotDetailView(spot: spot)
@@ -59,6 +61,9 @@ struct HomeFeedView: View {
                     }
                     .sheet(isPresented: $showConvoy) {
                         ConvoyDashboard()
+                    }
+                    .sheet(isPresented: $showChatDashboard) {
+                        GroupChatDashboard()
                     }
                 }
             } else {
@@ -71,12 +76,16 @@ struct HomeFeedView: View {
                         showDiscountAlert: $showDiscountAlert,
                         selectedCategory: $selectedCategory,
                         selectedSpot: $selectedSpot,
-                        showConvoy: $showConvoy
+                        showConvoy: $showConvoy,
+                        showChatDashboard: $showChatDashboard
                     )
                     .navigationTitle("Home")
                     .navigationBarHidden(true)
                     .sheet(isPresented: $showConvoy) {
                         ConvoyDashboard()
+                    }
+                    .sheet(isPresented: $showChatDashboard) {
+                        GroupChatDashboard()
                     }
                 } detail: {
                     ZStack {
@@ -130,7 +139,8 @@ struct HomeFeedContent: View {
     @Binding var showDiscountAlert: Bool
     @Binding var selectedCategory: String
     @Binding var selectedSpot: CampingSpot?
-    @Binding var showConvoy: Bool // NEW: Binding
+    @Binding var showConvoy: Bool
+    @Binding var showChatDashboard: Bool // NEW: Binding
     
     // Live User Name
     var userName: String {
@@ -180,6 +190,13 @@ struct HomeFeedContent: View {
                     
                     Button(action: { showCompass = true }) {
                         Image(systemName: "safari.fill")
+                            .padding(12)
+                            .glassEffect(GlassStyle.regular.interactive(), in: Circle())
+                            .foregroundStyle(Color.white)
+                    }
+                    
+                    Button(action: { showChatDashboard = true }) {
+                        Image(systemName: "bubble.left.and.bubble.right.fill")
                             .padding(12)
                             .glassEffect(GlassStyle.regular.interactive(), in: Circle())
                             .foregroundStyle(Color.white)

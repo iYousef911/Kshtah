@@ -31,6 +31,10 @@ struct SpotDetailView: View {
     @State private var rainChance: String = "--"
     @State private var aiInsight: String = "" // NEW: AI Insight text
     @State private var showConvoy = false // NEW: For Pro Convoy
+    @State private var showGroupChat = false // NEW: Group Chat Room
+    @State private var currentMoon: MoonPhase? // NEW: Live Moon Data
+    @State private var isLoadingChatRoom = false // NEW: Loading state for chat room
+    @State private var selectedChatRoom: ChatRoom? // NEW: Selected chat room
     
     // Image Picking State
     @State private var selectedItem: PhotosPickerItem?
@@ -41,53 +45,145 @@ struct SpotDetailView: View {
             LiquidBackgroundView()
             
             ScrollView {
-                VStack(spacing: 20) {
-                    headerSection
-                    weatherSection
-                    
-                    ProLockedView(feature: "ai_insight") {
-                        aiInsightSection
-                    }
-                    
-                    ProLockedView(feature: "stargazing") {
-                        stargazingSection
-                    }
-                    
-                    ProLockedView(feature: "packing_list") {
-                        packingSection
-                    }
-                    
-                    attributionSection
-                    actionsSection
-                    commentsSection
-                }
+                scrollContent
             }
             .sheet(isPresented: $showConvoy) {
-                ConvoyDashboard()
+                ConvoyDashboard(spot: spot)
             }
             .sheet(isPresented: $showShareSheet) {
                 CustomShareSheet(spot: spot, imageToShare: shareImagePreview, weatherTemp: temperature)
             }
-            .navigationTitle("").toolbarBackground(.hidden, for: .navigationBar)
-            .toolbar { ToolbarItem(placement: .topBarLeading) { Button(action: { dismiss() }) { Image(systemName: "xmark.circle.fill").font(.title2).foregroundStyle(Color.white.opacity(0.6)) } } }
-            .onAppear { store.loadComments(for: spot.id) }
-            .task {
-                if let weather = await WeatherManager.shared.getWeather(latitude: spot.coordinate.latitude, longitude: spot.coordinate.longitude) {
-                    let temp = weather.currentWeather.temperature.converted(to: .celsius).value
-                    let wind = weather.currentWeather.wind.speed.converted(to: .kilometersPerHour).value
-                    self.temperature = "\(Int(temp))°C"
-                    self.windSpeed = "\(Int(wind)) كم"
-                    self.rainChance = (weather.dailyForecast.first?.precipitationChance ?? 0) > 0 ? "\(Int((weather.dailyForecast.first?.precipitationChance ?? 0) * 100))%" : "0%"
-                    let insight = await AIService.shared.generateInsight(
-                        spotName: spot.name,
-                        location: spot.location,
-                        temperature: temp, 
-                        condition: weather.currentWeather.condition.description
-                    )
-                    withAnimation { self.aiInsight = insight }
+            .sheet(isPresented: $showGroupChat) {
+                if isLoadingChatRoom {
+                    ZStack {
+                        Color.black.ignoresSafeArea()
+                        VStack {
+                            ProgressView()
+                                .tint(.white)
+                            Text(settings.t("جاري تجهيز الغرفة..."))
+                                .foregroundStyle(.white)
+                                .padding(.top)
+                        }
+                    }
+                } else if let room = selectedChatRoom {
+                    NavigationStack { GroupChatView(room: room) }
+                } else if let room = store.chatRooms.first(where: { $0.spotId == spot.id.uuidString }) {
+                    NavigationStack { GroupChatView(room: room) }
+                } else {
+                    // Fallback: Show loading
+                    ZStack {
+                        Color.black.ignoresSafeArea()
+                        VStack {
+                            ProgressView()
+                                .tint(.white)
+                            Text(settings.t("جاري تجهيز الغرفة..."))
+                                .foregroundStyle(.white)
+                                .padding(.top)
+                        }
+                    }
                 }
             }
+            .navigationTitle("").toolbarBackground(.hidden, for: .navigationBar)
+            .toolbar { toolbarContent }
+            .onAppear { store.loadComments(for: spot.id) }
+            .task { await fetchWeatherData() }
         }
+    }
+    
+    private var scrollContent: some View {
+        VStack(spacing: 20) {
+            headerSection
+            weatherSection
+            
+            ProLockedView(feature: "ai_insight") {
+                aiInsightSection
+            }
+            
+            ProLockedView(feature: "stargazing") {
+                stargazingSection
+            }
+            
+            ProLockedView(feature: "packing_list") {
+                packingSection
+            }
+            
+            spotChatSection
+            
+            attributionSection
+            actionsSection
+            commentsSection
+        }
+    }
+    
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button(action: { dismiss() }) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(Color.white.opacity(0.6))
+            }
+        }
+    }
+    
+    private func fetchWeatherData() async {
+        guard let weather = await WeatherManager.shared.getWeather(latitude: spot.coordinate.latitude, longitude: spot.coordinate.longitude) else { return }
+        
+        let temp = weather.currentWeather.temperature.converted(to: .celsius).value
+        let wind = weather.currentWeather.wind.speed.converted(to: .kilometersPerHour).value
+        
+        await MainActor.run {
+            self.temperature = "\(Int(temp))°C"
+            self.windSpeed = "\(Int(wind)) كم"
+            self.rainChance = (weather.dailyForecast.first?.precipitationChance ?? 0) > 0 ? "\(Int((weather.dailyForecast.first?.precipitationChance ?? 0) * 100))%" : "0%"
+            
+            if let daily = weather.dailyForecast.first {
+                let phase = daily.moon.phase
+                let (name, icon) = MoonPhaseService.shared.mapWeatherKitPhase(phase)
+                self.currentMoon = MoonPhase(phase: 0, name: name, icon: icon, illumination: 100)
+            }
+        }
+        
+        let moonToUse = currentMoon ?? MoonPhaseService.shared.getMoonPhase()
+        let insight = await AIService.shared.generateInsight(
+            spotName: spot.name,
+            location: spot.location,
+            temperature: temp, 
+            condition: weather.currentWeather.condition.description,
+            moonPhase: moonToUse.name,
+            moonIllumination: moonToUse.illumination
+        )
+        
+        await MainActor.run {
+            withAnimation { self.aiInsight = insight }
+        }
+        
+        store.createSpotChatIfNeeded(spotId: spot.id.uuidString, spotName: spot.name)
+        store.fetchChatRooms()
+    }
+    
+    private var spotChatSection: some View {
+        Button(action: {
+            ensureChatRoomExists()
+        }) {
+            HStack {
+                Image(systemName: "bubble.left.and.bubble.right.fill")
+                    .font(.title3)
+                VStack(alignment: .leading) {
+                    Text(settings.t("دردشة زوار المكان"))
+                        .font(.headline)
+                    Text(settings.t("تحدث مع أشخاص زاروا هذا المكان أو يخططون لزيارته"))
+                        .font(.caption2)
+                }
+                Spacer()
+                Image(systemName: "chevron.left")
+                    .font(.caption.bold())
+            }
+            .padding()
+            .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 20))
+            .foregroundStyle(.white)
+        }
+        .padding(.horizontal)
     }
     
     // MARK: - Sub-Views
@@ -187,7 +283,8 @@ struct SpotDetailView: View {
     private var stargazingSection: some View {
         StargazingInsightView(
             bortleScale: spot.bortleScale,
-            isPro: store.userProfile?.isPro ?? false
+            isPro: store.userProfile?.isPro ?? false,
+            moonOverride: currentMoon
         )
         .padding(.horizontal)
     }
@@ -360,6 +457,33 @@ struct SpotDetailView: View {
         
         if let url = URL(string: urlString) {
             UIApplication.shared.open(url)
+        }
+    }
+    
+    // MARK: - Chat Room Helper
+    private func ensureChatRoomExists() {
+        // Check if room already exists in the list
+        if let existingRoom = store.chatRooms.first(where: { $0.spotId == spot.id.uuidString }) {
+            selectedChatRoom = existingRoom
+            showGroupChat = true
+            return
+        }
+        
+        // Show loading state
+        isLoadingChatRoom = true
+        showGroupChat = true
+        
+        // Get or create the room
+        store.getOrCreateSpotRoom(spotId: spot.id.uuidString, spotName: spot.name) { room in
+            DispatchQueue.main.async {
+                isLoadingChatRoom = false
+                if let room = room {
+                    selectedChatRoom = room
+                } else {
+                    // Failed to create room, close sheet
+                    showGroupChat = false
+                }
+            }
         }
     }
 }

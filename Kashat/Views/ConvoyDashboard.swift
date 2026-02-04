@@ -7,8 +7,19 @@ struct ConvoyDashboard: View {
     @EnvironmentObject var settings: SettingsManager
     @Environment(\.dismiss) var dismiss
     
-    // Mock Convoy ID for Demo
-    let convoyId = "demo_convoy_123"
+    let spot: CampingSpot?
+    
+    init(spot: CampingSpot? = nil) {
+        self.spot = spot
+    }
+    
+    // Dynamic Convoy ID based on spot or fallback to global
+    private var convoyId: String {
+        if let spot = spot {
+            return "convoy_\(spot.id)"
+        }
+        return "global_convoy"
+    }
     
     var body: some View {
         ZStack {
@@ -55,7 +66,7 @@ struct ConvoyDashboard: View {
                         Text(settings.t("القافلة النشطة"))
                             .font(.caption2)
                             .foregroundStyle(.white.opacity(0.8))
-                        Text("كشتة النفوذ الكبير")
+                        Text(spot?.name ?? settings.t("القافلة العامة"))
                             .font(.headline)
                             .foregroundStyle(.white)
                     }
@@ -120,6 +131,15 @@ struct ConvoyDashboard: View {
                 manager.joinConvoy(id: convoyId, userId: user.id, userName: user.name)
             }
         }
+        .onReceive(LocationManager.shared.$userLocation) { location in
+            guard let location = location, let user = store.userProfile else { return }
+            manager.updateLocation(
+                latitude: location.coordinate.latitude,
+                longitude: location.coordinate.longitude,
+                userId: user.id,
+                convoyId: convoyId
+            )
+        }
         .onDisappear {
             manager.stopListening()
         }
@@ -127,8 +147,15 @@ struct ConvoyDashboard: View {
     
     private func sendPing(_ type: PingType) {
         guard let user = store.userProfile else { return }
-        // In a real app, we'd get the actual user location
-        manager.sendPing(type: type, memberId: user.id, memberName: user.name, lat: 0, lon: 0, convoyId: convoyId)
+        let loc = LocationManager.shared.userLocation?.coordinate
+        manager.sendPing(
+            type: type,
+            memberId: user.id,
+            memberName: user.name,
+            lat: loc?.latitude ?? 0,
+            lon: loc?.longitude ?? 0,
+            convoyId: convoyId
+        )
     }
     
     private func pingIcon(for type: PingType) -> String {
