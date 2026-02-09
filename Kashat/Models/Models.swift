@@ -21,8 +21,10 @@ struct CampingSpot: Identifiable, Hashable {
     var isProOnly: Bool = false // NEW: Pro Exclusive Spot
     var aiInsight: String? // NEW: Advanced AI Insight for Pro users
     var bortleScale: Int? // NEW: Light pollution level (1-9)
+    var addedBy: String? // NEW: Creator Name
+    var contactInfo: String? // NEW: Creator Email or Phone
     
-    init(id: UUID = UUID(), name: String, location: String, type: String, rating: Double, numberOfRatings: Int = 0, coordinate: CLLocationCoordinate2D, imageURL: String? = nil, isProOnly: Bool = false, aiInsight: String? = nil, bortleScale: Int? = nil) {
+    init(id: UUID = UUID(), name: String, location: String, type: String, rating: Double, numberOfRatings: Int = 0, coordinate: CLLocationCoordinate2D, imageURL: String? = nil, isProOnly: Bool = false, aiInsight: String? = nil, bortleScale: Int? = nil, addedBy: String? = nil, contactInfo: String? = nil) {
         self.id = id
         self.name = name
         self.location = location
@@ -34,6 +36,8 @@ struct CampingSpot: Identifiable, Hashable {
         self.isProOnly = isProOnly
         self.aiInsight = aiInsight
         self.bortleScale = bortleScale
+        self.addedBy = addedBy
+        self.contactInfo = contactInfo
     }
     
     static func == (lhs: CampingSpot, rhs: CampingSpot) -> Bool { return lhs.id == rhs.id }
@@ -73,7 +77,7 @@ struct GearItem: Identifiable, Hashable, Codable {
 }
 
 // --- UPDATED: User Profile Model ---
-struct UserProfile: Identifiable, Codable {
+struct UserProfile: Identifiable, Codable, Equatable {
     let id: String
     var name: String
     var phoneNumber: String
@@ -139,6 +143,23 @@ struct Comment: Identifiable, Hashable, Codable {
     }
 }
 
+// NEW: Spot Moment Model
+struct SpotMoment: Identifiable, Codable, Hashable {
+    let id: UUID
+    let userId: String
+    let userName: String
+    let imageURL: String
+    let timestamp: Date
+    let caption: String?
+    
+    var timeAgo: String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.locale = Locale(identifier: "ar_SA")
+        formatter.unitsStyle = .short
+        return formatter.localizedString(for: timestamp, relativeTo: Date())
+    }
+}
+
 struct ChatMessage: Identifiable, Hashable, Codable {
     let id: UUID
     let text: String
@@ -178,10 +199,10 @@ struct Review: Identifiable, Codable {
 
 struct MockData {
     static let spots = [
-        CampingSpot(name: "روضة خريم", location: "الرياض", type: "روضة", rating: 4.8, numberOfRatings: 120, coordinate: CLLocationCoordinate2D(latitude: 25.3, longitude: 47.2)),
-        CampingSpot(name: "نفود الثويرات", location: "الزلفي", type: "كثبان", rating: 4.9, numberOfRatings: 85, coordinate: CLLocationCoordinate2D(latitude: 26.3, longitude: 44.8)),
-        CampingSpot(name: "وادي لجب", location: "جازان", type: "وادي", rating: 4.7, numberOfRatings: 210, coordinate: CLLocationCoordinate2D(latitude: 17.5, longitude: 42.9)),
-        CampingSpot(name: "جبل طويق", location: "القدية", type: "جبل", rating: 4.6, numberOfRatings: 95, coordinate: CLLocationCoordinate2D(latitude: 24.8, longitude: 46.2))
+        CampingSpot(name: "روضة خريم", location: "الرياض", type: "روضة", rating: 4.8, numberOfRatings: 120, coordinate: CLLocationCoordinate2D(latitude: 25.3, longitude: 47.2), bortleScale: 4),
+        CampingSpot(name: "نفود الثويرات", location: "الزلفي", type: "كثبان", rating: 4.9, numberOfRatings: 85, coordinate: CLLocationCoordinate2D(latitude: 26.3, longitude: 44.8), bortleScale: 2),
+        CampingSpot(name: "وادي لجب", location: "جازان", type: "وادي", rating: 4.7, numberOfRatings: 210, coordinate: CLLocationCoordinate2D(latitude: 17.5, longitude: 42.9), bortleScale: 3),
+        CampingSpot(name: "جبل طويق", location: "القدية", type: "جبل", rating: 4.6, numberOfRatings: 95, coordinate: CLLocationCoordinate2D(latitude: 24.8, longitude: 46.2), bortleScale: 5)
     ]
     
     static let gear = [

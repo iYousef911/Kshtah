@@ -1,5 +1,7 @@
 import SwiftUI
 import MapKit
+import AudioToolbox
+import StoreKit
 
 struct ConvoyDashboard: View {
     @StateObject private var manager = ConvoyManager()
@@ -131,6 +133,11 @@ struct ConvoyDashboard: View {
                 manager.joinConvoy(id: convoyId, userId: user.id, userName: user.name)
             }
         }
+        .onChange(of: store.userProfile) { oldProfile, newProfile in
+            if let user = newProfile {
+                manager.joinConvoy(id: convoyId, userId: user.id, userName: user.name)
+            }
+        }
         .onReceive(LocationManager.shared.$userLocation) { location in
             guard let location = location, let user = store.userProfile else { return }
             manager.updateLocation(
@@ -143,10 +150,24 @@ struct ConvoyDashboard: View {
         .onDisappear {
             manager.stopListening()
         }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("NewConvoyPing"))) { _ in
+            triggerFeedback(isOutgoing: false)
+        }
+    }
+    
+    private func triggerFeedback(isOutgoing: Bool) {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+        
+        // Play system sound: 1004 is 'Sent Message', 1003 is 'Received Message'
+        let soundId: SystemSoundID = isOutgoing ? 1004 : 1003
+        AudioServicesPlaySystemSound(soundId)
     }
     
     private func sendPing(_ type: PingType) {
         guard let user = store.userProfile else { return }
+        triggerFeedback(isOutgoing: true)
         let loc = LocationManager.shared.userLocation?.coordinate
         manager.sendPing(
             type: type,
@@ -156,6 +177,14 @@ struct ConvoyDashboard: View {
             lon: loc?.longitude ?? 0,
             convoyId: convoyId
         )
+        
+        // NEW: Strategic Review Prompt
+        store.successfulActionsCount += 1
+        if store.successfulActionsCount >= 3 {
+            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+                SKStoreReviewController.requestReview(in: scene)
+            }
+        }
     }
     
     private func pingIcon(for type: PingType) -> String {

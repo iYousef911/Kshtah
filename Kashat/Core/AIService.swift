@@ -19,17 +19,28 @@ class AIService {
     // Simple in-memory cache to save tokens
     private var insightCache: [String: String] = [:]
     
-    func generateInsight(spotName: String, location: String, temperature: Double, condition: String) async -> String {
+    func generateInsight(spotName: String, location: String, temperature: Double, condition: String, moonPhase: String? = nil, moonIllumination: Int? = nil) async -> String {
+        // 0. Gate for PRO Users
+        guard SubscriptionManager.shared.isPro else {
+            return fallbackInsight(temperature: temperature)
+        }
+
         // 1. Check Cache
-        let cacheKey = "\(spotName)-\(Int(temperature))-\(condition)"
+        let cacheKey = "\(spotName)-\(Int(temperature))-\(condition)-\(moonPhase ?? "")"
         if let cached = insightCache[cacheKey] {
             return cached
         }
         
-        // 2. Prepare Prompt (Simple payload)
+        // 2. Prepare Prompt
+        var moonContext = ""
+        if let phase = moonPhase, let illumination = moonIllumination {
+            moonContext = "حالة القمر: \(phase)، نسبة الإضاءة: \(illumination)%."
+        }
+        
         let prompt = """
         اكتب جملة واحدة قصيرة وجذابة (باللهجة السعودية البيضاء) تنصح فيها بزيارة كشتة في "\(spotName)" في منطقة "\(location)".
         الجو الآن: \(Int(temperature)) درجة مئوية، وحالته: \(condition).
+        \(moonContext) (إذا كان القمر بدراً أو ساطعاً، اذكر جمال ليلة القمراء).
         ركز على تجربة الكشتة والأجواء. لا تزيد عن 15 كلمة.
         """
         
@@ -70,6 +81,11 @@ class AIService {
     }
     
     func generatePackingList(spotName: String, location: String, type: String, temperature: Double) async -> [String] {
+        // Gate for PRO Users
+        guard SubscriptionManager.shared.isPro else {
+            return ["ماء", "خيمة", "حطب", "فرشة", "كشاف", "شاحن"] // Immediate Fallback
+        }
+
         let prompt = """
         اكتب قائمة تجهيز (packing list) مختصرة جداً لكشتة في "\(spotName)" بمنطقة "\(location)".
         نوع المكان: \(type).
@@ -102,6 +118,47 @@ class AIService {
         }
         
         return ["ماء", "خيمة", "حطب", "فرشة", "كشاف", "شاحن"] // Fallback
+    }
+    
+    func generateItinerary(carType: String, duration: Int, groupSize: Int) async -> String {
+        // Gate for PRO Users
+        guard SubscriptionManager.shared.isPro else {
+            return "هذه الميزة حصرية للمشتركين. اشترك في PRO للحصول على خطط كشتة ذكية ومخصصة!"
+        }
+
+        let prompt = """
+        اكتب خطة كشتة (itinerary) مفصلة وممتعة لمنطقة صحراوية في السعودية.
+        السيارة: \(carType).
+        المدة: \(duration) أيام.
+        عدد الأشخاص: \(groupSize) أشخاص.
+        اجعل الخطة تشمل: أماكن مقترحة (لا تسمي مكاناً محدداً بل صف النوع)، أنشطة (شب نار، شوي، تأمل نجوم)، ونصيحة سلامة خاصة بالسيارة.
+        استخدم لغة جذابة باللهجة السعودية البيضاء.
+        لا تزيد عن 100 كلمة.
+        """
+        
+        var request = URLRequest(url: workerURL)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: Any] = [
+            "prompt": prompt,
+            "temperature": 0.7
+        ]
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+            let (data, response) = try await session.data(for: request)
+            
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200,
+               let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let content = json["content"] as? String {
+                return content
+            }
+        } catch {
+            print("⚠️ Itinerary Error: \(error)")
+        }
+        
+        return "للأسف تعذر تجهيز الخطة الآن. تأكد من اتصالك بالإنترنت وحاول مرة أخرى." // Fallback
     }
     
     private func fallbackInsight(temperature: Double) -> String {

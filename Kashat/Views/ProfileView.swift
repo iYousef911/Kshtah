@@ -83,7 +83,7 @@ struct ProfileView: View {
     // MARK: - Extracted Views
     
     private var headerSection: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             ZStack {
                 Circle()
                     .fill(Color.white.opacity(0.1))
@@ -107,6 +107,7 @@ struct ProfileView: View {
                         .glassEffect(GlassStyle.regular, in: Circle())
                 }
                 
+                // Edit Button Overlay
                 VStack {
                     Spacer()
                     HStack {
@@ -121,8 +122,18 @@ struct ProfileView: View {
                 }
                 .frame(width: 100, height: 100)
             }
+            .overlay(
+                // Pro Glow
+                Circle()
+                    .stroke(
+                        LinearGradient(colors: store.userProfile?.isPro == true ? [.yellow, .orange] : [.clear], startPoint: .topLeading, endPoint: .bottomTrailing),
+                        lineWidth: 3
+                    )
+                    .blur(radius: 4)
+                    .opacity(store.userProfile?.isPro == true ? 0.8 : 0)
+            )
             
-            VStack(spacing: 4) {
+            VStack(spacing: 8) {
                 HStack {
                     Text(userName)
                         .font(.title2)
@@ -136,16 +147,8 @@ struct ProfileView: View {
                     }
                     
                     if SubscriptionManager.shared.isPro || store.userProfile?.isPro == true {
-                        Text("PRO")
-                            .font(.caption2)
-                            .fontWeight(.black)
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(
-                                LinearGradient(colors: [.orange, .red], startPoint: .topLeading, endPoint: .bottomTrailing)
-                            )
-                            .clipShape(Capsule())
+                        Image(systemName: "crown.fill")
+                            .foregroundStyle(Color.yellow)
                     }
                 }
                 
@@ -156,6 +159,53 @@ struct ProfileView: View {
                     .padding(.vertical, 4)
                     .glassEffect(GlassStyle.regular, in: Capsule())
             }
+            
+            // NEW: Stats View with Real Data
+            ProfileStatsView(
+                favoritesCount: store.favoriteSpotIds.count,
+                tripsCount: store.bookings.count,
+                balance: balance
+            )
+            .padding(.horizontal)
+            
+            // NEW: Pro Status / Upgrade Card
+            if !SubscriptionManager.shared.isPro && store.userProfile?.isPro != true {
+                Button(action: { SubscriptionManager.shared.presentPaywall() }) {
+                    LiquidGlassCard {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack {
+                                    Text(settings.t("كشات PRO"))
+                                        .font(.title3)
+                                        .fontWeight(.black)
+                                    Image(systemName: "crown.fill")
+                                        .foregroundStyle(.white)
+                                }
+                                
+                                Text(settings.t("احصل على تجربة بلا حدود"))
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .opacity(0.9)
+                                
+                                Text(settings.t("فتح المواقع الحصرية، خرائط متقدمة، ومسارات خاصة."))
+                                    .font(.caption)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .opacity(0.8)
+                            }
+                            Spacer()
+                            
+                            Image(systemName: "chevron.left")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .opacity(0.6)
+                        }
+                    }
+                    .frame(height: 120)
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal)
+                .buttonStyle(.plain) // Important for tap interaction
+            }
         }
         .padding(.top, 20)
     }
@@ -163,12 +213,12 @@ struct ProfileView: View {
     private var settingsListSection: some View {
         VStack(spacing: 4) {
             Button(action: { showMyBookings = true }) {
-                SettingsRow(icon: "cube.box.fill", title: settings.t("طلباتي"), subtitle: settings.t("عرض سجل التأجير"))
+                SettingsRow(icon: "cube.box.fill", title: settings.t("طلباتي"), subtitle: "")
             }
             .buttonStyle(.plain)
             
             Button(action: { showFavorites = true }) {
-                SettingsRow(icon: "heart.fill", title: settings.t("المفضلة"), subtitle: "١٢ \(settings.t("مكان"))")
+                SettingsRow(icon: "heart.fill", title: settings.t("المفضلة"), subtitle: "")
             }
             .buttonStyle(.plain)
             
@@ -197,7 +247,7 @@ struct ProfileView: View {
                     }
                 }
             }) {
-                SettingsRow(icon: "questionmark.circle.fill", title: settings.t("المساعدة والدعم"), subtitle: settings.t("تواصل معنا"))
+                SettingsRow(icon: "questionmark.circle.fill", title: settings.t("المساعدة والدعم"), subtitle: "")
             }
             .buttonStyle(.plain)
             .alert(settings.t("تم نسخ البريد الإلكتروني ✅"), isPresented: $showCopyAlert) {
@@ -232,6 +282,52 @@ struct ProfileView: View {
         .padding()
         .glassEffect(GlassStyle.regular, in: RoundedRectangle(cornerRadius: 24))
         .padding(.horizontal)
+    }
+    
+    // MARK: - Extracted Stats Component
+    struct ProfileStatsView: View {
+        let favoritesCount: Int
+        let tripsCount: Int
+        let balance: Double
+        
+        var body: some View {
+            HStack(spacing: 12) {
+                StatItem(title: "المفضلة", value: "\(favoritesCount)", icon: "heart.fill")
+                Divider().background(Color.white.opacity(0.2)).frame(height: 30)
+                StatItem(title: "الرحلات", value: "\(tripsCount)", icon: "tent.fill")
+            }
+            .padding()
+            .background(Color.white.opacity(0.05))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+            )
+        }
+    }
+    
+    struct StatItem: View {
+        let title: String
+        let value: String
+        let icon: String
+        
+        var body: some View {
+            VStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.caption2)
+                    .foregroundStyle(Color.white.opacity(0.6))
+                
+                Text(value)
+                    .font(.headline)
+                    .fontWeight(.bold)
+                    .foregroundStyle(Color.white)
+                
+                Text(title)
+                    .font(.caption2)
+                    .foregroundStyle(Color.white.opacity(0.6))
+            }
+            .frame(maxWidth: .infinity)
+        }
     }
     
     private var authButtonsSection: some View {
@@ -376,4 +472,7 @@ struct SettingsRow: View {
 }
 #Preview {
     ProfileView()
+        .environmentObject(AppDataStore())
+        .environmentObject(SettingsManager())
+        .environmentObject(ThemeManager())
 }

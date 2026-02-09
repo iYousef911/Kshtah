@@ -26,5 +26,7 @@
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>نحتاج إلى الكاميرا لتحديد اتجاه القبلة بتقنية الواقع المعزز</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>نحتاج إلى الميكروفون لخاصية اللاسلكي في القافلة</string>
 </dict>
 </plist>

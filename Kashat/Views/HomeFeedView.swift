@@ -17,6 +17,8 @@ struct HomeFeedView: View {
     @State private var showDiscountAlert = false // NEW: Discount Alert State
     @State private var showConvoy = false // NEW: For Pro Convoy
     @State private var showChatDashboard = false // NEW: Group Chat
+    @State private var showAIItinerary = false // NEW: AI Itinerary
+    @State private var weatherAlert: (type: String, speed: Int)? // NEW: Alert State
     @State private var selectedCategory = "الكل"
 
     // ... (rest of code)
@@ -52,7 +54,9 @@ struct HomeFeedView: View {
                         selectedCategory: $selectedCategory,
                         selectedSpot: $selectedSpot,
                         showConvoy: $showConvoy,
-                        showChatDashboard: $showChatDashboard
+                        showChatDashboard: $showChatDashboard,
+                        showAIItinerary: $showAIItinerary,
+                        weatherAlert: $weatherAlert
                     )
                     .sheet(item: $selectedSpot) { spot in // Sheet only on iPhone
                         SpotDetailView(spot: spot)
@@ -77,7 +81,9 @@ struct HomeFeedView: View {
                         selectedCategory: $selectedCategory,
                         selectedSpot: $selectedSpot,
                         showConvoy: $showConvoy,
-                        showChatDashboard: $showChatDashboard
+                        showChatDashboard: $showChatDashboard,
+                        showAIItinerary: $showAIItinerary,
+                        weatherAlert: $weatherAlert
                     )
                     .navigationTitle("Home")
                     .navigationBarHidden(true)
@@ -106,6 +112,18 @@ struct HomeFeedView: View {
             }
         }
         .trackScreen(name: "Home") // Analytic Screen
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("SevereWeatherAlert"))) { note in
+            if let info = note.userInfo as? [String: Any],
+               let type = info["type"] as? String,
+               let speed = info["speed"] as? Int {
+                withAnimation {
+                    self.weatherAlert = (type: type, speed: speed)
+                }
+            }
+        }
+        .sheet(isPresented: $showAIItinerary) {
+            AIItineraryView()
+        }
     }
 
     // Action Logic
@@ -141,6 +159,8 @@ struct HomeFeedContent: View {
     @Binding var selectedSpot: CampingSpot?
     @Binding var showConvoy: Bool
     @Binding var showChatDashboard: Bool // NEW: Binding
+    @Binding var showAIItinerary: Bool
+    @Binding var weatherAlert: (type: String, speed: Int)?
     
     // Live User Name
     var userName: String {
@@ -163,6 +183,30 @@ struct HomeFeedContent: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                // Weather Alert Banner
+                if let alert = weatherAlert {
+                    HStack {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.yellow)
+                        VStack(alignment: .leading) {
+                            Text(settings.t("تحذير من رياح قوية!"))
+                                .font(.headline)
+                            Text("\(settings.t("سرعة الرياح بلغت")) \(alert.speed) \(settings.t("كم/س. انتبه على خيمتك!"))")
+                                .font(.caption)
+                        }
+                        Spacer()
+                        Button(action: { weatherAlert = nil }) {
+                            Image(systemName: "xmark").font(.caption).padding(8).background(.white.opacity(0.1)).clipShape(Circle())
+                        }
+                    }
+                    .padding()
+                    .background(Color.red.opacity(0.8))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .padding(.horizontal)
+                    .foregroundStyle(.white)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
+                
                 // Header
                 HStack {
                     VStack(alignment: .leading) {
@@ -244,6 +288,36 @@ struct HomeFeedContent: View {
                             }
                             .buttonStyle(.plain)
                         }
+                    }
+                    .padding(.horizontal)
+                }
+                
+                // AI Itinerary Master (PRO ONLY)
+                if store.userProfile?.isPro ?? false {
+                    Button(action: { showAIItinerary = true }) {
+                        HStack(spacing: 20) {
+                            ZStack {
+                                Circle().fill(LinearGradient(colors: [.blue, .purple], startPoint: .top, endPoint: .bottom))
+                                    .frame(width: 60, height: 60)
+                                Image(systemName: "sparkles")
+                                    .font(.title)
+                                    .foregroundStyle(.white)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(settings.t("خبير الكشتات الذكي"))
+                                    .font(.headline)
+                                    .foregroundStyle(.white)
+                                Text(settings.t("خل الذكاء الاصطناعي يجهز لك أحلى عطلة نهاية أسبوع!"))
+                                    .font(.caption)
+                                    .foregroundStyle(.white.opacity(0.7))
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.left")
+                                .foregroundStyle(.white.opacity(0.5))
+                        }
+                        .padding()
+                        .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 24))
                     }
                     .padding(.horizontal)
                 }
@@ -375,7 +449,7 @@ struct HomeFeedContent: View {
             store.fetchSpots()
             store.fetchCategories() // NEW: Refresh categories
         }
-        .sheet(isPresented: $showInbox) { InboxView().presentationDetents([.large]) }
+        .sheet(isPresented: $showInbox) { MessagesView().presentationDetents([.large]) }
         .sheet(isPresented: $showNotifications) { NotificationsView().presentationDetents([.medium]).environmentObject(store).environmentObject(settings).environmentObject(theme) }
         .fullScreenCover(isPresented: $showCompass) { ARQiblaView().environmentObject(store).environmentObject(settings).environmentObject(theme) }
         .alert(settings.t("نسخنا لك كود الخصم! 🎁"), isPresented: $showDiscountAlert) {
@@ -473,4 +547,7 @@ struct CategoryGlassPill: View {
 
 #Preview {
     HomeFeedView()
+        .environmentObject(AppDataStore())
+        .environmentObject(SettingsManager())
+        .environmentObject(ThemeManager())
 }

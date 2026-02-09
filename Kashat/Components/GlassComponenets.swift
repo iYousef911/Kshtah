@@ -11,6 +11,8 @@ internal import Combine
 // MARK: - Liquid Background View (Theme Engine)
 struct LiquidBackgroundView: View {
     @EnvironmentObject var theme: ThemeManager
+    var color: Color? = nil // NEW: Support for custom override (e.g., Onboarding)
+    
     @State private var time: Float = 0.0
     let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
     
@@ -27,6 +29,14 @@ struct LiquidBackgroundView: View {
     }
     
     var themeColors: [Color] {
+        if let overrideColor = color {
+            return [
+                overrideColor, overrideColor.opacity(0.8), overrideColor,
+                overrideColor.opacity(0.4), .black, overrideColor.opacity(0.4),
+                overrideColor, overrideColor.opacity(0.8), overrideColor
+            ]
+        }
+        
         let base = theme.currentTheme.gradientColors
         if theme.currentTheme == .foundingDay {
             return [
@@ -46,7 +56,9 @@ struct LiquidBackgroundView: View {
     }
     
     var body: some View {
-        Group {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            
             if #available(iOS 18.0, *) {
                 MeshGradient(
                     width: 3,
@@ -57,7 +69,9 @@ struct LiquidBackgroundView: View {
                 .ignoresSafeArea()
                 .onReceive(timer) { _ in time += 0.05 }
             } else {
-                Color.black.ignoresSafeArea()
+                // Fallback for older iOS
+                LinearGradient(colors: [themeColors[0], .black], startPoint: .top, endPoint: .bottom)
+                    .ignoresSafeArea()
             }
         }
     }
@@ -110,6 +124,11 @@ struct GlassSpotCard: View {
     
     var isFavorite: Bool { store.isSpotFavorite(spot) }
     
+    // NEW: Visual Locking Logic
+    var isLocked: Bool {
+        spot.isProOnly && !(store.userProfile?.isPro ?? false)
+    }
+    
     var body: some View {
         HStack {
             ZStack {
@@ -123,24 +142,41 @@ struct GlassSpotCard: View {
                     }
                     .frame(width: 80, height: 80)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .blur(radius: isLocked ? 6 : 0) // Blur if locked
                 } else {
                     RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(0.05)).frame(width: 80, height: 80)
                     Image(systemName: "photo").foregroundStyle(Color.white.opacity(0.5))
+                }
+                
+                // Lock Overlay
+                if isLocked {
+                    Image(systemName: "lock.fill")
+                        .font(.title)
+                        .foregroundStyle(.white)
+                        .shadow(radius: 4)
                 }
             }
             
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 4) {
-                    Text(spot.name).font(.headline).foregroundStyle(Color.white)
-                    if spot.isProOnly {
+                    // Hide Name if Locked
+                    Text(isLocked ? "موقع حصري 💎" : spot.name)
+                        .font(.headline)
+                        .foregroundStyle(isLocked ? Color.yellow : Color.white)
+                    
+                    if spot.isProOnly && !isLocked {
                         Image(systemName: "crown.fill")
                             .font(.caption2)
                             .foregroundStyle(.yellow)
                     }
                 }
-                Text(spot.location).font(.caption).foregroundStyle(Color.white.opacity(0.6))
+                
+                // Hide Location if Locked
+                Text(isLocked ? "متاح فقط لمشتركي PRO" : spot.location)
+                    .font(.caption)
+                    .foregroundStyle(Color.white.opacity(0.6))
+                
                 HStack {
-                    // Update Star color to match new Gold theme
                     Image(systemName: "star.fill").foregroundStyle(Color(red: 0.9, green: 0.8, blue: 0.4)).font(.caption2)
                     Text(String(format: "%.1f", spot.rating)).font(.caption2.weight(.bold)).foregroundStyle(Color.white)
                 }
@@ -150,12 +186,74 @@ struct GlassSpotCard: View {
             Button(action: { withAnimation(.spring) { store.toggleFavoriteSpot(spot) } }) {
                 Image(systemName: isFavorite ? "heart.fill" : "heart")
                     .font(.title2)
-                    .foregroundStyle(isFavorite ? Color(red: 0.8, green: 0.3, blue: 0.3) : Color.white.opacity(0.3)) // Muted Red
+                    .foregroundStyle(isFavorite ? Color(red: 0.8, green: 0.3, blue: 0.3) : Color.white.opacity(0.3))
                     .symbolEffect(.bounce, value: isFavorite)
             }
             .buttonStyle(.plain)
         }
         .padding()
         .glassEffect(GlassStyle.regular.interactive(), in: RoundedRectangle(cornerRadius: 24))
+        // Add a gold border for locked/pro spots to make them pop even more
+        .overlay(
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(isLocked ? Color.yellow.opacity(0.5) : Color.clear, lineWidth: 1)
+        )
+    }
+}
+// MARK: - Liquid Glass Card (New)
+struct LiquidGlassCard<Content: View>: View {
+    let content: Content
+    @State private var time: Float = 0.0
+    let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
+    
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+    
+    var body: some View {
+        ZStack {
+            // 1. Dynamic Liquid Background
+            if #available(iOS 18.0, *) {
+                MeshGradient(
+                    width: 3,
+                    height: 3,
+                    points: [
+                        .init(0, 0), .init(0.5, 0), .init(1, 0),
+                        .init(0, 0.5), .init(0.5 + Float(sin(Double(time)) * 0.1), 0.5 + Float(cos(Double(time)) * 0.1)), .init(1, 0.5),
+                        .init(0, 1), .init(0.5, 1), .init(1, 1)
+                    ],
+                    colors: [
+                        .orange, .red, .purple,
+                        .blue.opacity(0.5), .white.opacity(0.8), .orange.opacity(0.5),
+                        .purple, .red, .orange
+                    ]
+                )
+                .onReceive(timer) { _ in time += 0.05 }
+            } else {
+                LinearGradient(colors: [.orange, .red, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
+            }
+            
+            // 2. Ultra Thin Glass Layer
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .opacity(0.85) // High transparency for "Liquid" look
+            
+            // 3. Content
+            content
+                .padding()
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 24))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(
+                    LinearGradient(
+                        colors: [.white.opacity(0.6), .white.opacity(0.1), .white.opacity(0.6)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
+        )
+        .shadow(color: .orange.opacity(0.3), radius: 15, x: 0, y: 10)
     }
 }

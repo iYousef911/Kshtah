@@ -26,7 +26,7 @@ struct ContentView: View {
                     
                     TabView(selection: $selectedTab) {
                         HomeFeedView().tabItem { Label(settings.t("الرئيسية"), systemImage: "house.fill") }.tag(0)
-                        MarketplaceView().tabItem { Label(settings.t("السوق"), systemImage: "bag.fill") }.tag(1)
+                        MessagesView().tabItem { Label(settings.t("الرسائل"), systemImage: "bubble.left.and.bubble.right.fill") }.tag(1)
                         KashatMap().tabItem { Label(settings.t("الخريطة"), systemImage: "map.fill") }.tag(2)
                         ProfileView().tabItem { Label(settings.t("حسابي"), systemImage: "person.fill") }.tag(3)
                     }
@@ -51,6 +51,13 @@ struct ContentView: View {
                 unlockApp()
             } else {
                 isLocked = false
+            }
+            
+            // NEW: Strategic Paywall on Launch
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                if !SubscriptionManager.shared.isPro {
+                    SubscriptionManager.shared.presentPaywall()
+                }
             }
         }
     }

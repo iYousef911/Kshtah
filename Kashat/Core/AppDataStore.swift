@@ -18,13 +18,14 @@ class AppDataStore: ObservableObject {
     @Published var gear: [GearItem] = []
     @Published var bookings: [Booking] = []
     @Published var comments: [UUID: [Comment]] = [:]
+    @Published var moments: [UUID: [SpotMoment]] = [:] // NEW: Live Moments
     
     @Published var favoriteSpotIds: Set<UUID> = []
     @Published var favoriteGearIds: Set<UUID> = []
     
-    @Published var chats: [ChatThread] = []
-    @Published var activeThreadMessages: [ChatMessage] = []
     @Published var userProfile: UserProfile?
+    @Published var chats: [ChatThread] = [] // RESTORED
+    @Published var activeThreadMessages: [ChatMessage] = [] // RESTORED
     @Published var categories: [Category] = [] // NEW: Dynamic Categories
     @Published var recommendedSpots: [RecommendedSpot] = [] // NEW: Smart Recommendations
     
@@ -59,6 +60,15 @@ class AppDataStore: ObservableObject {
     private let firebase = FirebaseManager.shared
     private var cancellables = Set<AnyCancellable>()
     private var messageListener: ListenerRegistration?
+    private var roomMessageListener: ListenerRegistration?
+    @Published var replyingToMessage: GroupMessage? // NEW: For Chat Replies
+    
+    @Published var chatRooms: [ChatRoom] = [] // NEW
+    @Published var activeRoomMessages: [GroupMessage] = [] // NEW
+    @Published var isBanned: Bool = false // NEW
+    @Published var successfulActionsCount: Int = UserDefaults.standard.integer(forKey: "successfulActionsCount") {
+        didSet { UserDefaults.standard.set(successfulActionsCount, forKey: "successfulActionsCount") }
+    }
     
     // Initializer
     init() {
@@ -84,27 +94,29 @@ class AppDataStore: ObservableObject {
         fetchCategories() // NEW: Dynamic Categories
         
         // 3. Fetch Remote Config
-        firebase.fetchRemoteConfig { [weak self] (marketplace, wallet, homeTitle, showBanner, themeColor, code, maintenance, email, minVersion, fee, btnStyle, payMethod, isFoundingDay) in
-            self?.isMarketplaceEnabled = marketplace
-            self?.isWalletEnabled = wallet
-            self?.homeTitleText = homeTitle
-            self?.showDiscountBanner = showBanner
-            self?.primaryThemeColor = themeColor
-            self?.discountCode = code
-            
-            self?.isMaintenanceMode = maintenance
-            self?.supportEmail = email
-            self?.minRequiredVersion = minVersion
-            
-            self?.serviceFeePercentage = fee
-            self?.rentButtonStyle = btnStyle
-            self?.defaultPaymentMethod = payMethod
-            
-            // Activation of Founding Day Theme via Remote Config
-            if isFoundingDay {
-                self?.currentTheme = .foundingDay
-            } else {
-                self?.currentTheme = .standard
+        firebase.fetchRemoteConfig { [weak self] (marketplace: Bool, wallet: Bool, homeTitle: String, showBanner: Bool, themeColor: String, code: String, maintenance: Bool, email: String, minVersion: String, fee: Double, btnStyle: String, payMethod: String, isFoundingDay: Bool) in
+            DispatchQueue.main.async {
+                self?.isMarketplaceEnabled = marketplace
+                self?.isWalletEnabled = wallet
+                self?.homeTitleText = homeTitle
+                self?.showDiscountBanner = showBanner
+                self?.primaryThemeColor = themeColor
+                self?.discountCode = code
+                
+                self?.isMaintenanceMode = maintenance
+                self?.supportEmail = email
+                self?.minRequiredVersion = minVersion
+                
+                self?.serviceFeePercentage = fee
+                self?.rentButtonStyle = btnStyle
+                self?.defaultPaymentMethod = payMethod
+                
+                // Activation of Founding Day Theme via Remote Config
+                if isFoundingDay {
+                    self?.currentTheme = .foundingDay
+                } else {
+                    self?.currentTheme = .standard
+                }
             }
         }
     }
@@ -204,6 +216,76 @@ class AppDataStore: ObservableObject {
         }
     }
     
+    // MARK: - Group Chat
+    func fetchChatRooms() {
+        firebase.fetchChatRooms { [weak self] rooms in
+            DispatchQueue.main.async {
+                self?.chatRooms = rooms
+            }
+        }
+    }
+    
+    func openGroupChat(roomId: String) {
+        self.activeRoomMessages = []
+        self.roomMessageListener?.remove()
+        self.roomMessageListener = firebase.listenToGroupMessages(roomId: roomId) { [weak self] messages in
+            DispatchQueue.main.async {
+                self?.activeRoomMessages = messages
+            }
+        }
+    }
+    
+    
+    
+    func createSpotChatIfNeeded(spotId: String, spotName: String) {
+        firebase.createRoomForSpotIfNeeded(spotId: spotId, spotName: spotName)
+    }
+    
+    func getOrCreateSpotRoom(spotId: String, spotName: String, completion: @escaping (ChatRoom?) -> Void) {
+        firebase.getOrCreateRoomForSpot(spotId: spotId, spotName: spotName) { [weak self] room in
+            DispatchQueue.main.async {
+                if let room = room {
+                    // Update local chatRooms if not already present
+                    if !(self?.chatRooms.contains(where: { $0.id == room.id }) ?? false) {
+                        self?.chatRooms.append(room)
+                    }
+                }
+                completion(room)
+            }
+        }
+    }
+    
+    // MARK: - Admin Tools
+    func promoteToAdmin() {
+        firebase.becomeAdmin { [weak self] success in
+            if success {
+                guard let uid = self?.firebase.user?.uid else { return }
+                self?.loadUserData(uid: uid)
+            }
+        }
+    }
+    
+    func deleteMessage(roomId: String, messageId: String) {
+        firebase.deleteGroupMessage(roomId: roomId, messageId: messageId) { success in
+            // Listeners will handle the UI update
+        }
+    }
+    
+    func banUser(userId: String) {
+        firebase.banUser(userId: userId) { success in
+            // Logic handled
+        }
+    }
+    
+    func checkBanStatus() {
+        guard let uid = firebase.user?.uid else { return }
+        firebase.checkIfBanned(uid: uid) { [weak self] banned in
+            DispatchQueue.main.async {
+                self?.isBanned = banned
+            }
+        }
+    }
+    
     private func sendLocalNotification(text: String) {
         let content = UNMutableNotificationContent()
         content.title = "رسالة جديدة 💬"
@@ -216,6 +298,7 @@ class AppDataStore: ObservableObject {
     
     // MARK: - User Data & Wallet
     func loadUserData(uid: String) {
+        fetchUserChats(uid: uid) // NEW: Load chats automatically
         firebase.fetchUserProfile(uid: uid) { [weak self] (profile: UserProfile?) in
             DispatchQueue.main.async {
                 self?.userProfile = profile
@@ -284,11 +367,25 @@ class AppDataStore: ObservableObject {
             finalCoordinate = CLLocationCoordinate2D(latitude: randomLat, longitude: randomLong)
         }
         
+        // Capture User Info
+        let creatorName = userProfile?.name ?? "Kashat User"
+        let creatorContact = userProfile?.phoneNumber ?? ""
+        
         if let imageData = imageData {
             firebase.uploadImage(data: imageData, folder: "spots") { [weak self] (url: String?) in
                 guard let self = self, let url = url else { return }
                 
-                let newSpot = CampingSpot(id: UUID(), name: name, location: location, type: type, rating: 0.0, coordinate: finalCoordinate, imageURL: url)
+                let newSpot = CampingSpot(
+                    id: UUID(),
+                    name: name,
+                    location: location,
+                    type: type,
+                    rating: 0.0,
+                    coordinate: finalCoordinate,
+                    imageURL: url,
+                    addedBy: creatorName,
+                    contactInfo: creatorContact
+                )
                 
                 DispatchQueue.main.async {
                     withAnimation { self.spots.insert(newSpot, at: 0) }
@@ -296,7 +393,17 @@ class AppDataStore: ObservableObject {
                 self.firebase.addSpotToFirebase(newSpot)
             }
         } else {
-            let newSpot = CampingSpot(id: UUID(), name: name, location: location, type: type, rating: 0.0, coordinate: finalCoordinate, imageURL: imageURL)
+            let newSpot = CampingSpot(
+                id: UUID(),
+                name: name,
+                location: location,
+                type: type,
+                rating: 0.0,
+                coordinate: finalCoordinate,
+                imageURL: imageURL,
+                addedBy: creatorName,
+                contactInfo: creatorContact
+            )
             
             withAnimation { spots.insert(newSpot, at: 0) }
             firebase.addSpotToFirebase(newSpot)
@@ -366,12 +473,12 @@ class AppDataStore: ObservableObject {
                 rating: rating
             )
             newComment.imageURL = url
-            newComment.isAdmin = self.userProfile?.isAdmin ?? false // NEW
-            newComment.isPro = self.userProfile?.isPro ?? SubscriptionManager.shared.isPro // NEW: Pro status
+            newComment.isAdmin = self.userProfile?.isAdmin ?? false
+            newComment.isPro = self.userProfile?.isPro ?? SubscriptionManager.shared.isPro
             
             DispatchQueue.main.async {
-                if self.comments[spotId] != nil {
-                    withAnimation { self.comments[spotId]?.insert(newComment, at: 0) }
+                if let existing = self.comments[spotId] {
+                    self.comments[spotId] = [newComment] + existing
                 } else {
                     self.comments[spotId] = [newComment]
                 }
@@ -389,6 +496,36 @@ class AppDataStore: ObservableObject {
         }
     }
     
+    // MARK: - Moments Logic (New)
+    func fetchMoments(for spotId: UUID) {
+        // Mock fetch or Firebase fetch
+    }
+    
+    func addMoment(spotId: UUID, imageData: Data, caption: String?) {
+        guard let uid = firebase.user?.uid, let name = userProfile?.name else { return }
+        
+        firebase.uploadImage(data: imageData, folder: "moments") { [weak self] url in
+            guard let self = self, let url = url else { return }
+            
+            let newMoment = SpotMoment(
+                id: UUID(),
+                userId: uid,
+                userName: name,
+                imageURL: url,
+                timestamp: Date(),
+                caption: caption
+            )
+            
+            DispatchQueue.main.async {
+                if let existing = self.moments[spotId] {
+                    self.moments[spotId] = [newMoment] + existing
+                } else {
+                    self.moments[spotId] = [newMoment]
+                }
+            }
+        }
+    }
+
     // MARK: - Favorites Logic
     func toggleFavoriteSpot(_ spot: CampingSpot) {
         if favoriteSpotIds.contains(spot.id) {
@@ -421,6 +558,26 @@ class AppDataStore: ObservableObject {
     
     func isGearFavorite(_ item: GearItem) -> Bool {
         return favoriteGearIds.contains(item.id)
+    }
+    
+    // MARK: - Group Chat logic
+    func sendGroupMessage(roomId: String, text: String, gifURL: String? = nil) {
+        guard let name = userProfile?.name else { return }
+        
+        firebase.sendGroupMessage(
+            roomId: roomId,
+            text: text,
+            senderName: name,
+            senderImage: userProfile?.profileImageURL,
+            isAdmin: userProfile?.isAdmin ?? false,
+            gifURL: gifURL,
+            replyTo: replyingToMessage // Pass the reply metadata
+        )
+        
+    // After sending, clear the reply state
+        DispatchQueue.main.async {
+            self.replyingToMessage = nil
+        }
     }
     
     // MARK: - AI Recommendations

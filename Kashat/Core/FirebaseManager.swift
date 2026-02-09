@@ -139,6 +139,39 @@ class FirebaseManager: ObservableObject {
         }
     }
     
+    // MARK: - Admin Tools
+    func becomeAdmin(completion: @escaping (Bool) -> Void) {
+        guard let uid = user?.uid else { completion(false); return }
+        let data: [String: Any] = [
+            "isAdmin": true,
+            "isPro": true
+        ]
+        db.collection("users").document(uid).updateData(data) { error in
+            completion(error == nil)
+        }
+    }
+    
+    func banUser(userId: String, completion: @escaping (Bool) -> Void) {
+        db.collection("banned_users").document(userId).setData([
+            "timestamp": Timestamp(date: Date()),
+            "bannedBy": user?.uid ?? "system"
+        ]) { error in
+            completion(error == nil)
+        }
+    }
+    
+    func checkIfBanned(uid: String, completion: @escaping (Bool) -> Void) {
+        db.collection("banned_users").document(uid).getDocument { snap, _ in
+            completion(snap?.exists ?? false)
+        }
+    }
+    
+    func deleteGroupMessage(roomId: String, messageId: String, completion: @escaping (Bool) -> Void) {
+        db.collection("chat_rooms").document(roomId).collection("messages").document(messageId).delete { error in
+            completion(error == nil)
+        }
+    }
+    
     func verifyCode(code: String, completion: @escaping (Error?) -> Void) {
         guard let verificationId = verificationId else { return }
         let credential = PhoneAuthProvider.provider().credential(withVerificationID: verificationId, verificationCode: code)
@@ -471,7 +504,197 @@ class FirebaseManager: ObservableObject {
                 completion(threads)
             }
     }
-
+    
+    // MARK: - Group Chat
+    func createRoomForSpotIfNeeded(spotId: String, spotName: String) {
+        let roomRef = db.collection("chat_rooms").document(spotId)
+        roomRef.getDocument { snapshot, error in
+            if snapshot?.exists == false {
+                let roomData: [String: Any] = [
+                    "name": spotName,
+                    "description": "دردشة مجموعة \(spotName)",
+                    "type": ChatRoom.RoomType.spot.rawValue,
+                    "spotId": spotId,
+                    "lastMessageText": "",
+                    "lastMessageTime": Timestamp(date: Date()),
+                    "participantCount": 0
+                ]
+                roomRef.setData(roomData)
+            }
+        }
+    }
+    
+    func getOrCreateRoomForSpot(spotId: String, spotName: String, completion: @escaping (ChatRoom?) -> Void) {
+        let roomRef = db.collection("chat_rooms").document(spotId)
+        roomRef.getDocument { [weak self] snapshot, error in
+            guard let self = self else { completion(nil); return }
+            
+            if let snapshot = snapshot, snapshot.exists {
+                // Room exists, convert to ChatRoom
+                let data = snapshot.data() ?? [:]
+                guard let name = data["name"] as? String,
+                      let typeString = data["type"] as? String,
+                      let type = ChatRoom.RoomType(rawValue: typeString) else {
+                    completion(nil)
+                    return
+                }
+                
+                let room = ChatRoom(
+                    id: snapshot.documentID,
+                    name: name,
+                    description: data["description"] as? String ?? "",
+                    lastMessageText: data["lastMessageText"] as? String,
+                    lastMessageTime: (data["lastMessageTime"] as? Timestamp)?.dateValue(),
+                    participantCount: data["participantCount"] as? Int ?? 0,
+                    type: type,
+                    spotId: data["spotId"] as? String
+                )
+                completion(room)
+            } else {
+                // Room doesn't exist, create it
+                let roomData: [String: Any] = [
+                    "name": spotName,
+                    "description": "دردشة مجموعة \(spotName)",
+                    "type": ChatRoom.RoomType.spot.rawValue,
+                    "spotId": spotId,
+                    "lastMessageText": "",
+                    "lastMessageTime": Timestamp(date: Date()),
+                    "participantCount": 0
+                ]
+                roomRef.setData(roomData) { error in
+                    if error == nil {
+                        // Return the created room
+                        let room = ChatRoom(
+                            id: spotId,
+                            name: spotName,
+                            description: "دردشة مجموعة \(spotName)",
+                            lastMessageText: nil,
+                            lastMessageTime: Date(),
+                            participantCount: 0,
+                            type: .spot,
+                            spotId: spotId
+                        )
+                        completion(room)
+                    } else {
+                        completion(nil)
+                    }
+                }
+            }
+        }
+    }
+    
+    func fetchChatRooms(completion: @escaping ([ChatRoom]) -> Void) {
+        db.collection("chat_rooms").order(by: "lastMessageTime", descending: true).getDocuments { snapshot, error in
+            guard let docs = snapshot?.documents else { completion([]); return }
+            let rooms = docs.compactMap { doc -> ChatRoom? in
+                let data = doc.data()
+                guard let name = data["name"] as? String,
+                      let typeString = data["type"] as? String,
+                      let type = ChatRoom.RoomType(rawValue: typeString) else { return nil }
+                
+                return ChatRoom(
+                    id: doc.documentID,
+                    name: name,
+                    description: data["description"] as? String ?? "",
+                    lastMessageText: data["lastMessageText"] as? String,
+                    lastMessageTime: (data["lastMessageTime"] as? Timestamp)?.dateValue(),
+                    participantCount: data["participantCount"] as? Int ?? 0,
+                    type: type,
+                    spotId: data["spotId"] as? String
+                )
+            }
+            completion(rooms)
+        }
+    }
+    
+    func listenToGroupMessages(roomId: String, completion: @escaping ([GroupMessage]) -> Void) -> ListenerRegistration {
+        return db.collection("chat_rooms").document(roomId).collection("messages")
+            .order(by: "timestamp", descending: false)
+            .addSnapshotListener { snapshot, error in
+                guard let docs = snapshot?.documents else { return }
+                let messages = docs.compactMap { doc -> GroupMessage? in
+                    let data = doc.data()
+                    guard let senderId = data["senderId"] as? String,
+                          let senderName = data["senderName"] as? String,
+                          let timestamp = (data["timestamp"] as? Timestamp)?.dateValue() else { return nil }
+                    let text = data["text"] as? String ?? ""
+                    let gifURL = data["gifURL"] as? String
+                    
+                    return GroupMessage(
+                        id: doc.documentID,
+                        text: text,
+                        senderId: senderId,
+                        senderName: senderName,
+                        senderImage: data["senderImage"] as? String,
+                        timestamp: timestamp,
+                        isAdmin: data["isAdmin"] as? Bool ?? false,
+                        gifURL: gifURL,
+                        replyToId: data["replyToId"] as? String,
+                        replyToText: data["replyToText"] as? String,
+                        replyToSenderName: data["replyToSenderName"] as? String
+                    )
+                }
+                completion(messages)
+            }
+    }
+    
+    func sendGroupMessage(roomId: String, text: String, senderName: String, senderImage: String?, isAdmin: Bool = false, gifURL: String? = nil, replyTo: GroupMessage? = nil) {
+        guard let currentUid = user?.uid else { return }
+        let msgRef = db.collection("chat_rooms").document(roomId).collection("messages").document()
+        var msgData: [String: Any] = [
+            "text": text,
+            "senderId": currentUid,
+            "senderName": senderName,
+            "senderImage": senderImage as Any,
+            "timestamp": Timestamp(date: Date()),
+            "isAdmin": isAdmin
+        ]
+        if let gifURL = gifURL {
+            msgData["gifURL"] = gifURL
+        }
+        
+        if let reply = replyTo {
+            msgData["replyToId"] = reply.id
+            msgData["replyToText"] = reply.text
+            msgData["replyToSenderName"] = reply.senderName
+        }
+        
+        msgRef.setData(msgData)
+        let lastPreview = gifURL != nil ? "🖼 GIF" : text
+        db.collection("chat_rooms").document(roomId).updateData([
+            "lastMessageText": lastPreview,
+            "lastMessageTime": Timestamp(date: Date())
+        ])
+        
+        // Trigger notification logic if replying to someone else
+        if let reply = replyTo, reply.senderId != currentUid {
+            // Fetch room name for notification
+            db.collection("chat_rooms").document(roomId).getDocument { [weak self] snapshot, _ in
+                let roomName = snapshot?.data()?["name"] as? String ?? "دردشة مجموعة"
+                self?.sendReplyNotification(to: reply.senderId, senderName: senderName, messageText: text, roomName: roomName)
+            }
+        }
+    }
+    
+    private func sendReplyNotification(to userId: String, senderName: String, messageText: String, roomName: String? = nil) {
+        // Send Real Push Notification via OneSignal REST API
+        let title = "رد جديد من \(senderName)"
+        let body = messageText
+        let roomNameStr = roomName ?? "الدردشة"
+        
+        NotificationService.shared.sendPushNotification(
+            to: [userId],
+            title: title,
+            message: body,
+            data: [
+                "type": "reply",
+                "roomName": roomNameStr
+            ]
+        )
+        
+        print("✅ Reply notification sent to \(userId)")
+    }
+    
     // MARK: - Image Upload
     func uploadImage(data: Data, folder: String, completion: @escaping (String?) -> Void) {
         let path = "\(folder)/\(UUID().uuidString).jpg"
@@ -514,7 +737,9 @@ class FirebaseManager: ObservableObject {
                     imageURL: data["imageURL"] as? String,
                     isProOnly: data["isProOnly"] as? Bool ?? false,
                     aiInsight: data["aiInsight"] as? String,
-                    bortleScale: data["bortleScale"] as? Int
+                    bortleScale: data["bortleScale"] as? Int,
+                    addedBy: data["addedBy"] as? String,
+                    contactInfo: data["contactInfo"] as? String
                 )
             }
             completion(spots)
@@ -535,6 +760,8 @@ class FirebaseManager: ObservableObject {
         if spot.isProOnly { data["isProOnly"] = true }
         if let insight = spot.aiInsight { data["aiInsight"] = insight }
         if let bortle = spot.bortleScale { data["bortleScale"] = bortle }
+        if let addedBy = spot.addedBy { data["addedBy"] = addedBy }
+        if let contactInfo = spot.contactInfo { data["contactInfo"] = contactInfo }
         
         db.collection("spots").document(spot.id.uuidString).setData(data)
     }

@@ -111,13 +111,18 @@ class RecommendationManager {
         var finalRecommendations: [RecommendedSpot] = []
         
         for var rec in topSpots {
-            // Call AI Service
-            let insight = await AIService.shared.generateInsight(
-                spotName: rec.spot.name,
-                location: rec.spot.location,
-                temperature: rec.temperature,
-                condition: rec.condition
-            )
+            // Call AI Service only if PRO
+            let insight: String
+            if SubscriptionManager.shared.isPro {
+                insight = await AIService.shared.generateInsight(
+                    spotName: rec.spot.name,
+                    location: rec.spot.location,
+                    temperature: rec.temperature,
+                    condition: rec.condition
+                )
+            } else {
+                insight = "توصية بناءً على الأجواء الممتازة!" // Simple non-AI insight
+            }
             
             // Create new struct with AI text
             let updatedRec = RecommendedSpot(

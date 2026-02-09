@@ -12,17 +12,7 @@ struct GroupChatDashboard: View {
                 Color.black.ignoresSafeArea()
                 LiquidBackgroundView()
                 
-                ScrollView {
-                    VStack(spacing: 16) {
-                        ForEach(store.chatRooms) { room in
-                            NavigationLink(destination: GroupChatView(room: room)) {
-                                RoomRow(room: room)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding()
-                }
+                ChatRoomsList()
             }
             .navigationTitle(settings.t("غرف الدردشة"))
             .toolbar {
@@ -34,6 +24,25 @@ struct GroupChatDashboard: View {
             .onAppear {
                 store.fetchChatRooms()
             }
+        }
+    }
+}
+
+struct ChatRoomsList: View {
+    @EnvironmentObject var store: AppDataStore
+    @EnvironmentObject var settings: SettingsManager
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                ForEach(store.chatRooms) { room in
+                    NavigationLink(destination: GroupChatView(room: room)) {
+                        RoomRow(room: room)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding()
         }
     }
 }

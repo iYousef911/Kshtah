@@ -45,8 +45,17 @@ struct InboxView: View {
                   }
               }
               .navigationTitle("الرسائل")
-              .toolbarBackground(.hidden, for: .navigationBar)
-              .toolbar { ToolbarItem(placement: .topBarLeading) { Button("إغلاق") { dismiss() }.foregroundStyle(Color.white) } }
+              .navigationBarTitleDisplayMode(.inline)
+              .toolbar {
+                  ToolbarItem(placement: .topBarLeading) {
+                      Button("إغلاق") { dismiss() }.foregroundStyle(Color.white)
+                  }
+              }
+              .onAppear {
+                  if let uid = FirebaseManager.shared.user?.uid {
+                      store.fetchUserChats(uid: uid)
+                  }
+              }
           }
       }
 }

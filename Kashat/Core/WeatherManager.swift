@@ -18,10 +18,21 @@ class WeatherManager {
         let location = CLLocation(latitude: latitude, longitude: longitude)
         do {
             let weather = try await service.weather(for: location)
+            checkIfSevere(weather)
             return weather
         } catch {
             print("Failed to fetch weather: \(error.localizedDescription)")
             return nil
+        }
+    }
+    
+    private func checkIfSevere(_ weather: Weather) {
+        let windSpeed = weather.currentWeather.wind.speed.converted(to: .kilometersPerHour).value
+        
+        // Thresholds for desert sandstorms / high winds (Example: > 40km/h)
+        if windSpeed > 40 {
+            let alertInfo = ["type": "wind", "speed": Int(windSpeed)] as [String : Any]
+            NotificationCenter.default.post(name: NSNotification.Name("SevereWeatherAlert"), object: nil, userInfo: alertInfo)
         }
     }
 }
