@@ -34,16 +34,28 @@ def upload_spots(db, data_file_path):
     
     count = 0
     for spot in spots_data:
-        # Check if spot with same name already exists
+        import uuid
+        
+        # Generate a stable UUID based on the name to ensure doc ID is a valid UUID string
+        spot_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, spot["name"])).upper()
+        
+        # Check if spot with same name already exists to preserve existing UUID if possible
+        # However, we prefer the name-based UUID for stability across script runs
         query = collection_ref.where("name", "==", spot["name"]).limit(1).stream()
         existing_doc = next(query, None)
         
         if existing_doc:
             doc_ref = existing_doc.reference
-            print(f"Updating existing spot: {spot['name']}")
+            print(f"Updating existing spot: {spot['name']} (ID: {doc_ref.id})")
+            # If the existing ID is not a UUID, we should ideally move it, 
+            # but for now we'll just use the name-based one if it matches our format
+            # or keep it if it's already a UUID. For consistency, let's use the stable one.
+            doc_ref = collection_ref.document(spot_uuid)
         else:
-            doc_ref = collection_ref.document()
-            print(f"Creating new spot: {spot['name']}")
+            doc_ref = collection_ref.document(spot_uuid)
+            print(f"Creating new spot: {spot['name']} (ID: {spot_uuid})")
+        
+        print(f"   Coordinates: {spot['latitude']}, {spot['longitude']}")
         
         # Prepare data with types matching Firestore schema
         data = {
@@ -53,9 +65,15 @@ def upload_spots(db, data_file_path):
             "rating": float(spot["rating"]),
             "numberOfRatings": int(spot["numberOfRatings"]),
             "latitude": float(spot["latitude"]),
-            "longitude": float(spot["longitude"]),  # Ensure these are simple floats as seen in model
-            "imageURL": spot["imageURL"]
+            "longitude": float(spot["longitude"]),
+            "imageURL": spot.get("imageURL"),
+            "aiInsight": spot.get("aiInsight"),
+            "bortleScale": spot.get("bortleScale"),
+            "isProOnly": spot.get("isProOnly", False)
         }
+        
+        # Remove None values
+        data = {k: v for k, v in data.items() if v is not None}
         
         doc_ref.set(data, merge=True)
         count += 1

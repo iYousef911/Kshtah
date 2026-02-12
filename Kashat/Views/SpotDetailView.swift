@@ -107,6 +107,19 @@ struct SpotDetailView: View {
                 ))
             }
         }
+        .confirmationDialog(settings.t("اختر تطبيق الخرائط"), isPresented: $showMapSelection, titleVisibility: .visible) {
+            Button(settings.t("خرائط آبل")) { openMap(app: .apple) }
+            
+            if canOpen(app: .google) {
+                Button(settings.t("خرائط قوقل")) { openMap(app: .google) }
+            }
+            
+            if canOpen(app: .waze) {
+                Button(settings.t("خرائط وايز")) { openMap(app: .waze) }
+            }
+            
+            Button(settings.t("إلغاء"), role: .cancel) { }
+        }
     }
     
     private var scrollContent: some View {

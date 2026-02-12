@@ -1,0 +1,130 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+    
+    // Helper function to check if user is banned
+    function isBanned() {
+      return exists(/databases/$(database)/documents/banned_users/$(request.auth.uid));
+    }
+    
+    // Users collection - users can read/write their own profile
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Chat Rooms Collection
+    match /chat_rooms/{roomId} {
+      // Allow authenticated users to read chat rooms
+      allow read: if isAuthenticated() && !isBanned();
+      
+      // Allow authenticated users to create chat rooms
+      allow create: if isAuthenticated() && !isBanned();
+      
+      // Allow authenticated users to update room metadata (like lastMessageText, lastMessageTime)
+      allow update: if isAuthenticated() && !isBanned();
+      
+      // Only admins can delete rooms
+      allow delete: if isAdmin();
+      
+      // Messages subcollection within chat rooms
+      match /messages/{messageId} {
+        // Allow authenticated users to read messages
+        allow read: if isAuthenticated() && !isBanned();
+        
+        // Allow authenticated users to create messages
+        allow create: if isAuthenticated() && !isBanned() && 
+                       request.resource.data.senderId == request.auth.uid;
+        
+        // Only admins can update or delete messages
+        allow update, delete: if isAdmin();
+      }
+    }
+    
+    // Banned users collection
+    match /banned_users/{userId} {
+      // Only admins can read banned users list
+      allow read: if isAdmin();
+      
+      // Only admins can create/update banned users
+      allow write: if isAdmin();
+      
+      // Users can check if they themselves are banned (for client-side checks)
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Chats collection (for 1-on-1 chats)
+    match /chats/{threadId} {
+      allow read, write: if isAuthenticated() && !isBanned() &&
+                          request.auth.uid in resource.data.participants;
+      
+      match /messages/{messageId} {
+        allow read, write: if isAuthenticated() && !isBanned() &&
+                            request.auth.uid in get(/databases/$(database)/documents/chats/$(threadId)).data.participants;
+      }
+    }
+    
+    // Spots collection
+    match /spots/{spotId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && !isBanned();
+      
+      // Comments subcollection under spots
+      match /comments/{commentId} {
+        // Allow authenticated users to read comments
+        allow read: if isAuthenticated();
+        
+        // Allow authenticated, non-banned users to create comments
+        allow create: if isAuthenticated() && !isBanned() &&
+                       request.resource.data.userId == request.auth.uid;
+        
+        // Allow users to update their own comments, or admins to update any
+        allow update: if isAuthenticated() && !isBanned() &&
+                      (resource.data.userId == request.auth.uid || isAdmin());
+        
+        // Allow users to delete their own comments, or admins to delete any
+        allow delete: if isAuthenticated() && 
+                      (resource.data.userId == request.auth.uid || isAdmin());
+      }
+    }
+    
+    // Gear collection
+    match /gear/{gearId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && !isBanned();
+    }
+    
+    // Categories collection
+    match /categories/{categoryId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Bookings collection
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || isAdmin());
+      allow write: if isAuthenticated() && !isBanned() &&
+                     request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Reviews collection
+    match /reviews/{reviewId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && !isBanned() &&
+                     request.resource.data.userId == request.auth.uid;
+    }
+  }
+}

@@ -85,3 +85,74 @@ exports.createUserProfile = functions.auth.user().onCreate((user) => {
     favoriteGearIds: []
   });
 });
+
+// 3. Send Reply Notification
+exports.sendReplyNotification = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "Auth required.");
+  }
+
+  const recipientUserId = data.recipientUserId;
+  const senderName = data.senderName;
+  const messageText = data.messageText;
+  const roomName = data.roomName || "دردشة مجموعة";
+
+  if (!recipientUserId || !senderName || !messageText) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing required fields.");
+  }
+
+  try {
+    // Get recipient's FCM token
+    const userDoc = await db.collection("users").doc(recipientUserId).get();
+    
+    if (!userDoc.exists) {
+      throw new functions.https.HttpsError("not-found", "Recipient user not found.");
+    }
+
+    const userData = userDoc.data();
+    const fcmToken = userData?.fcmToken;
+
+    if (!fcmToken) {
+      console.log(`No FCM token found for user ${recipientUserId}`);
+      return { success: false, reason: "no_token" };
+    }
+
+    // Prepare notification payload
+    const message = {
+      token: fcmToken,
+      notification: {
+        title: `رد من ${senderName}`,
+        body: messageText.length > 100 ? messageText.substring(0, 100) + "..." : messageText,
+      },
+      data: {
+        type: "reply",
+        senderName: senderName,
+        messageText: messageText,
+        roomName: roomName,
+        click_action: "FLUTTER_NOTIFICATION_CLICK",
+      },
+      apns: {
+        payload: {
+          aps: {
+            sound: "default",
+            badge: 1,
+            alert: {
+              title: `رد من ${senderName}`,
+              body: messageText.length > 100 ? messageText.substring(0, 100) + "..." : messageText,
+            },
+          },
+        },
+      },
+    };
+
+    // Send notification using Firebase Admin SDK
+    const response = await admin.messaging().send(message);
+    console.log("Successfully sent reply notification:", response);
+
+    return { success: true, messageId: response };
+
+  } catch (error) {
+    console.error("Error sending reply notification:", error);
+    throw new functions.https.HttpsError("internal", "Failed to send notification.");
+  }
+});
