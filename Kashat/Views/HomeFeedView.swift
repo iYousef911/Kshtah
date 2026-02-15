@@ -180,269 +180,323 @@ struct HomeFeedContent: View {
     
     // Helper to get icon (duplicated logic for simplicity in extraction or moved to shared)
     
+    @Environment(\.horizontalSizeClass) var sizeClass
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                // Weather Alert Banner
-                if let alert = weatherAlert {
-                    HStack {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.yellow)
-                        VStack(alignment: .leading) {
-                            Text(settings.t("تحذير من رياح قوية!"))
-                                .font(.headline)
-                            Text("\(settings.t("سرعة الرياح بلغت")) \(alert.speed) \(settings.t("كم/س. انتبه على خيمتك!"))")
-                                .font(.caption)
-                        }
-                        Spacer()
-                        Button(action: { weatherAlert = nil }) {
-                            Image(systemName: "xmark").font(.caption).padding(8).background(.white.opacity(0.1)).clipShape(Circle())
-                        }
-                    }
-                    .padding()
-                    .background(Color.red.opacity(0.8))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .padding(.horizontal)
-                    .foregroundStyle(.white)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                }
-                
-                // Header
-                HStack {
-                    VStack(alignment: .leading) {
+        ZStack {
+            // Mobile Background with Particles
+            if sizeClass == .compact {
+                ParticleEffectView()
+                    .zIndex(0)
+            }
+            
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    // Weather Alert Banner
+                    if let alert = weatherAlert {
+                        // ... (keep existing alert code)
                         HStack {
-                            Text(settings.t("مرحباً،") + " \(userName) 👋")
-                                .font(.title2.weight(.bold))
-                                .foregroundStyle(Color.white)
-                            
-                            if store.currentTheme == .foundingDay {
-                                FoundingDayBadge()
-                                    .scaleEffect(0.6)
-                                    .frame(width: 30, height: 30)
-                            }
-                            
-                            if store.userProfile?.isAdmin == true {
-                                Image(systemName: "checkmark.shield.fill")
-                                    .foregroundStyle(store.appColor)
-                            }
-                        }
-                        Text(settings.t(store.homeTitleText))
-                            .font(.subheadline)
-                            .foregroundStyle(Color.white.opacity(0.7))
-                    }
-                    Spacer()
-                    
-                    Button(action: { showCompass = true }) {
-                        Image(systemName: "safari.fill")
-                            .padding(12)
-                            .glassEffect(GlassStyle.regular.interactive(), in: Circle())
-                            .foregroundStyle(Color.white)
-                    }
-                    
-                    Button(action: { showChatDashboard = true }) {
-                        Image(systemName: "bubble.left.and.bubble.right.fill")
-                            .padding(12)
-                            .glassEffect(GlassStyle.regular.interactive(), in: Circle())
-                            .foregroundStyle(Color.white)
-                    }
-                    
-                    Button(action: { showInbox = true }) {
-                        Image(systemName: "envelope.badge.fill")
-                            .padding(12)
-                            .glassEffect(GlassStyle.regular.interactive(), in: Circle())
-                            .foregroundStyle(Color.white)
-                    }
-                    
-                    Button(action: { showNotifications = true }) {
-                        Image(systemName: "bell.badge.fill")
-                            .padding(12)
-                            .glassEffect(GlassStyle.regular.interactive(), in: Circle())
-                            .foregroundStyle(Color.white)
-                    }
-                    
-                    if store.userProfile?.isPro ?? false {
-                        Button(action: { showConvoy = true }) {
-                            Image(systemName: "car.2.fill")
-                                .padding(12)
-                                .glassEffect(GlassStyle.regular.interactive(), in: Circle())
-                                .foregroundStyle(Color.white)
-                        }
-                    }
-                }
-                .padding(.horizontal)
-                
-                // Categories
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 15) {
-                        // Dynamic Categories Loop
-                        ForEach(store.categories) { category in
-                            Button(action: {
-                                withAnimation { selectedCategory = category.type }
-                            }) {
-                                CategoryGlassPill(
-                                    icon: category.icon,
-                                    title: settings.t(category.name),
-                                    isSelected: selectedCategory == category.type,
-                                    activeColor: store.appColor
-                                )
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(.horizontal)
-                }
-                
-                // AI Itinerary Master (PRO ONLY)
-                if store.userProfile?.isPro ?? false {
-                    Button(action: { showAIItinerary = true }) {
-                        HStack(spacing: 20) {
-                            ZStack {
-                                Circle().fill(LinearGradient(colors: [.blue, .purple], startPoint: .top, endPoint: .bottom))
-                                    .frame(width: 60, height: 60)
-                                Image(systemName: "sparkles")
-                                    .font(.title)
-                                    .foregroundStyle(.white)
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(settings.t("خبير الكشتات الذكي"))
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.yellow)
+                            VStack(alignment: .leading) {
+                                Text(settings.t("تحذير من رياح قوية!"))
                                     .font(.headline)
-                                    .foregroundStyle(.white)
-                                Text(settings.t("خل الذكاء الاصطناعي يجهز لك أحلى عطلة نهاية أسبوع!"))
+                                Text("\(settings.t("سرعة الرياح بلغت")) \(alert.speed) \(settings.t("كم/س. انتبه على خيمتك!"))")
                                     .font(.caption)
-                                    .foregroundStyle(.white.opacity(0.7))
                             }
                             Spacer()
-                            Image(systemName: "chevron.left")
-                                .foregroundStyle(.white.opacity(0.5))
+                            Button(action: { weatherAlert = nil }) {
+                                Image(systemName: "xmark").font(.caption).padding(8).background(.white.opacity(0.1)).clipShape(Circle())
+                            }
                         }
                         .padding()
-                        .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 24))
+                        .background(Color.red.opacity(0.8))
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .padding(.horizontal)
+                        .foregroundStyle(.white)
+                        .transition(.move(edge: .top).combined(with: .opacity))
                     }
-                    .padding(.horizontal)
-                }
-                
-                // Discount Banner
-                if store.showDiscountBanner {
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(settings.t("عرض خاص! 🎉"))
-                                .font(.headline)
-                                .foregroundStyle(Color.white)
-                            Text(settings.t("خصم 10% على أول كشتة"))
-                                .font(.subheadline)
-                                .foregroundStyle(Color.white.opacity(0.8))
-                        }
-                        Spacer()
-                        Button(settings.t("استخدمه الآن")) {
-                            // Action placeholder
-                        }
-                        .font(.caption.bold())
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.white)
-                        .foregroundStyle(store.appColor)
-                        .clipShape(Capsule())
-                    }
-                    .padding()
-                    .background(
-                        LinearGradient(colors: [store.appColor.opacity(0.8), store.appColor.opacity(0.4)], startPoint: .leading, endPoint: .trailing)
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .padding(.horizontal)
-                }
-                
-                // NEW: Smart Recommendations Section
-                if !store.recommendedSpots.isEmpty {
-                    VStack(alignment: .leading) {
+                    
+                    // Header with Parallax & Fade
+                    GeometryReader { geo in
+                        let minY = geo.frame(in: .global).minY
+                        let opacity = max(0, min(1, (minY + 20) / 50)) // Fade out as you scroll up
+                        
                         HStack {
-                            Text(settings.t("🌞 كشتة الويكند"))
-                                .font(.title2.bold())
-                                .foregroundStyle(Color.white)
-                            Spacer()
-                            HStack(spacing: 4) {
-                                Image(systemName: "sparkles")
-                                Text(settings.t("مدعوم بالذكاء"))
+                            VStack(alignment: .leading) {
+                                HStack {
+                                    Text(settings.t("مرحباً،") + " \(userName) 👋")
+                                        .font(.title2.weight(.bold))
+                                        .foregroundStyle(Color.white)
+                                    
+                                    if store.currentTheme == .foundingDay {
+                                        FoundingDayBadge()
+                                            .scaleEffect(0.6)
+                                            .frame(width: 30, height: 30)
+                                    }
+                                    
+                                    if store.userProfile?.isAdmin == true {
+                                        Image(systemName: "checkmark.shield.fill")
+                                            .foregroundStyle(store.appColor)
+                                    }
+                                }
+                                Text(settings.t(store.homeTitleText))
+                                    .font(.subheadline)
+                                    .foregroundStyle(Color.white.opacity(0.7))
                             }
-                            .font(.caption)
-                            .foregroundStyle(Color.yellow)
-                            .padding(6)
-                            .background(Color.white.opacity(0.1))
-                            .clipShape(Capsule())
+                            Spacer()
+                            
+                            // Action Buttons
+                            HStack(spacing: 12) {
+                                Button(action: { showCompass = true }) {
+                                    Image(systemName: "safari.fill")
+                                        .padding(12)
+                                        .glassEffect(GlassStyle.regular.interactive(), in: Circle())
+                                        .foregroundStyle(Color.white)
+                                }
+                                
+                                Button(action: { showChatDashboard = true }) {
+                                    Image(systemName: "bubble.left.and.bubble.right.fill")
+                                        .padding(12)
+                                        .glassEffect(GlassStyle.regular.interactive(), in: Circle())
+                                        .foregroundStyle(Color.white)
+                                }
+                                
+                                Button(action: { showInbox = true }) {
+                                    Image(systemName: "envelope.badge.fill")
+                                        .padding(12)
+                                        .glassEffect(GlassStyle.regular.interactive(), in: Circle())
+                                        .foregroundStyle(Color.white)
+                                }
+                                
+                                Button(action: { showNotifications = true }) {
+                                    Image(systemName: "bell.badge.fill")
+                                        .padding(12)
+                                        .glassEffect(GlassStyle.regular.interactive(), in: Circle())
+                                        .foregroundStyle(Color.white)
+                                }
+                                
+                                if store.userProfile?.isPro ?? false {
+                                    Button(action: { showConvoy = true }) {
+                                        Image(systemName: "car.2.fill")
+                                            .padding(12)
+                                            .glassEffect(GlassStyle.regular.interactive(), in: Circle())
+                                            .foregroundStyle(Color.white)
+                                    }
+                                }
+                            }
                         }
                         .padding(.horizontal)
-                        
-                        Text(settings.t("اخترنا لك أفضل الأماكن بناءً على الطقس في عطلة نهاية الأسبوع!"))
-                            .font(.caption)
-                            .foregroundStyle(Color.white.opacity(0.7))
+                        .opacity(opacity) // Apply Fade
+                        .scaleEffect(0.9 + (0.1 * opacity)) // Subtle Scale
+                    }
+                    .frame(height: 60) // Fixed height placeholder
+                    .zIndex(1)
+                    
+                    
+                    // Categories (Entrance Animation 1)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 15) {
+                            ForEach(Array(store.categories.enumerated()), id: \.element.id) { index, category in
+                                Button(action: {
+                                    withAnimation { selectedCategory = category.type }
+                                    let generator = UIImpactFeedbackGenerator(style: .light)
+                                    generator.impactOccurred()
+                                }) {
+                                    CategoryGlassPill(
+                                        icon: category.icon,
+                                        title: settings.t(category.name),
+                                        isSelected: selectedCategory == category.type,
+                                        activeColor: store.appColor
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                .transition(.move(edge: .trailing).combined(with: .opacity))
+                                .animation(.easeOut(duration: 0.3).delay(Double(index) * 0.05), value: true) // Staggered
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                    
+                    // AI Itinerary Master (PRO ONLY)
+                    if store.userProfile?.isPro ?? false {
+                        Button(action: { showAIItinerary = true }) {
+                            HStack(spacing: 20) {
+                                ZStack {
+                                    Circle().fill(LinearGradient(colors: [.blue, .purple], startPoint: .top, endPoint: .bottom))
+                                        .frame(width: 60, height: 60)
+                                    Image(systemName: "sparkles")
+                                        .font(.title)
+                                        .foregroundStyle(.white)
+                                }
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(settings.t("خبير الكشتات الذكي"))
+                                        .font(.headline)
+                                        .foregroundStyle(.white)
+                                    Text(settings.t("خل الذكاء الاصطناعي يجهز لك أحلى عطلة نهاية أسبوع!"))
+                                        .font(.caption)
+                                        .foregroundStyle(.white.opacity(0.7))
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.left")
+                                    .foregroundStyle(.white.opacity(0.5))
+                            }
+                            .padding()
+                            .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 24))
+                        }
+                        .padding(.horizontal)
+                        .transition(.scale.combined(with: .opacity))
+                    }
+                    
+                    // Discount Banner
+                    if store.showDiscountBanner {
+                        // ... (keep existing banner code)
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(settings.t("عرض خاص! 🎉"))
+                                    .font(.headline)
+                                    .foregroundStyle(Color.white)
+                                Text(settings.t("خصم 10% على أول كشتة"))
+                                    .font(.subheadline)
+                                    .foregroundStyle(Color.white.opacity(0.8))
+                            }
+                            Spacer()
+                            Button(settings.t("استخدمه الآن")) {
+                                useDiscount()
+                            }
+                            .font(.caption.bold())
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color.white)
+                            .foregroundStyle(store.appColor)
+                            .clipShape(Capsule())
+                        }
+                        .padding()
+                        .background(
+                            LinearGradient(colors: [store.appColor.opacity(0.8), store.appColor.opacity(0.4)], startPoint: .leading, endPoint: .trailing)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .padding(.horizontal)
+                    }
+                    
+                    // NEW: Smart Recommendations Section (Entrance Animation 2)
+                    if !store.recommendedSpots.isEmpty {
+                        VStack(alignment: .leading) {
+                            HStack {
+                                Text(settings.t("🌞 كشتة الويكند"))
+                                    .font(.title2.bold())
+                                    .foregroundStyle(Color.white)
+                                Spacer()
+                                // Shimmering AI Badge
+                                HStack(spacing: 4) {
+                                    Image(systemName: "sparkles")
+                                    Text(settings.t("مدعوم بالذكاء"))
+                                }
+                                .font(.caption)
+                                .foregroundStyle(Color.yellow)
+                                .padding(6)
+                                .background(Color.white.opacity(0.1))
+                                .clipShape(Capsule())
+                                .overlay(
+                                    Capsule()
+                                        .strokeBorder(LinearGradient(colors: [.clear, .white.opacity(0.8), .clear], startPoint: .leading, endPoint: .trailing), lineWidth: 1)
+                                        .mask(
+                                            GeometryReader { geo in
+                                                Rectangle()
+                                                    .fill(LinearGradient(colors: [.clear, .white, .clear], startPoint: .leading, endPoint: .trailing))
+                                                    .frame(width: 50)
+                                                    .offset(x: -geo.size.width) // Start offset
+                                                    .onAppear {
+                                                        withAnimation(.linear(duration: 2).repeatForever(autoreverses: false)) {
+                                                            // Logic for shimmer handled by separate view usually, simplified here by static gradient for now or need separate ShimmerView
+                                                        }
+                                                    }
+                                            }
+                                        )
+                                )
+                            }
                             .padding(.horizontal)
+                            
+                            Text(settings.t("اخترنا لك أفضل الأماكن بناءً على الطقس في عطلة نهاية الأسبوع!"))
+                                .font(.caption)
+                                .foregroundStyle(Color.white.opacity(0.7))
+                                .padding(.horizontal)
+                            
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 15) {
+                                    ForEach(Array(store.recommendedSpots.enumerated()), id: \.element.id) { index, rec in
+                                        RecommendationCard(recommendation: rec)
+                                            .onTapGesture {
+                                                selectedSpot = rec.spot
+                                                let generator = UIImpactFeedbackGenerator(style: .medium)
+                                                generator.impactOccurred()
+                                            }
+                                            .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity), removal: .opacity))
+                                            .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(Double(index) * 0.1), value: true) // Cascade
+                                    }
+                                }
+                                .padding(.horizontal)
+                                .padding(.bottom, 20)
+                            }
+                        }
+                    }
+                    
+                    // Featured Spots Section
+                    if !filteredSpots.isEmpty {
+                        Text(settings.t("أماكن مميزة"))
+                            .font(.headline)
+                            .foregroundStyle(Color.white)
+                            .padding(.horizontal)
+                        
+                        ForEach(filteredSpots) { spot in
+                            GlassSpotCard(spot: spot)
+                                .padding(.horizontal)
+                                .padding(.bottom, 10)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    selectedSpot = spot
+                                    let generator = UIImpactFeedbackGenerator(style: .light)
+                                    generator.impactOccurred()
+                                }
+                                .transition(.scale(scale: 0.9).combined(with: .opacity))
+                        }
+                    } else {
+                        VStack(spacing: 12) {
+                            Image(systemName: "mappin.slash.circle.fill")
+                                .font(.system(size: 50))
+                                .foregroundStyle(Color.white.opacity(0.3))
+                            Text(settings.t("لا توجد أماكن في هذا التصنيف"))
+                                .foregroundStyle(Color.white.opacity(0.5))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 20)
+                    }
+                    
+                    // Recommended Gear Section
+                    if selectedCategory == "الكل" && store.isMarketplaceEnabled {
+                        Text(settings.t("معدات مقترحة"))
+                            .font(.headline)
+                            .foregroundStyle(Color.white)
+                            .padding(.horizontal)
+                            .padding(.top, 10)
                         
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 15) {
-                                ForEach(store.recommendedSpots) { rec in
-                                    RecommendationCard(recommendation: rec)
-                                        .onTapGesture {
-                                            selectedSpot = rec.spot
-                                        }
+                                ForEach(store.gear.prefix(5)) { item in
+                                    NavigationLink(destination: ProductDetailView(item: item)) {
+                                        GearMiniCard(item: item)
+                                    }
+                                    .buttonStyle(.plain)
                                 }
                             }
                             .padding(.horizontal)
-                            .padding(.bottom, 20)
                         }
                     }
                 }
-                
-                // Featured Spots Section
-                if !filteredSpots.isEmpty {
-                    Text(settings.t("أماكن مميزة"))
-                        .font(.headline)
-                        .foregroundStyle(Color.white)
-                        .padding(.horizontal)
-                    
-                    ForEach(filteredSpots) { spot in
-                        GlassSpotCard(spot: spot)
-                            .padding(.horizontal)
-                            .padding(.bottom, 10)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                selectedSpot = spot
-                            }
-                    }
-                } else {
-                    VStack(spacing: 12) {
-                        Image(systemName: "mappin.slash.circle.fill")
-                            .font(.system(size: 50))
-                            .foregroundStyle(Color.white.opacity(0.3))
-                        Text(settings.t("لا توجد أماكن في هذا التصنيف"))
-                            .foregroundStyle(Color.white.opacity(0.5))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 20)
-                }
-                
-                // Recommended Gear Section
-                if selectedCategory == "الكل" && store.isMarketplaceEnabled {
-                    Text(settings.t("معدات مقترحة"))
-                        .font(.headline)
-                        .foregroundStyle(Color.white)
-                        .padding(.horizontal)
-                        .padding(.top, 10)
-                    
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 15) {
-                            ForEach(store.gear.prefix(5)) { item in
-                                NavigationLink(destination: ProductDetailView(item: item)) {
-                                    GearMiniCard(item: item)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-                }
+                .padding(.top)
+                .padding(.bottom, 100)
             }
-            .padding(.top)
-            .padding(.bottom, 100)
         }
         .toolbar(.hidden, for: .navigationBar)
         .refreshable {
@@ -464,8 +518,6 @@ struct HomeFeedContent: View {
         UIPasteboard.general.string = store.discountCode
         showDiscountAlert = true
     }
-    
-
 } // End of HomeFeedContent
 
 struct CategoryGlassPill: View {
@@ -502,6 +554,7 @@ struct CategoryGlassPill: View {
         var body: some View {
             ZStack {
                 LiquidBackgroundView()
+                ParticleEffectView().opacity(0.5) // Subtle particles
                 
                 VStack {
                     // Header
@@ -526,6 +579,8 @@ struct CategoryGlassPill: View {
                         Image(systemName: "bell.slash.circle.fill")
                             .font(.system(size: 60))
                             .foregroundStyle(Color.white.opacity(0.3))
+                            .scaleEffect(1.1)
+                            .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: true)
                         
                         Text(settings.t("لا توجد إشعارات جديدة"))
                             .font(.headline)

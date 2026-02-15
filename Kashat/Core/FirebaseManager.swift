@@ -714,6 +714,31 @@ class FirebaseManager: ObservableObject {
             }
         }
     }
+    
+    func uploadAudio(url: URL, folder: String, completion: @escaping (String?) -> Void) {
+        let path = "\(folder)/\(UUID().uuidString).m4a"
+        let ref = storage.reference().child(path)
+        let metadata = StorageMetadata()
+        metadata.contentType = "audio/m4a"
+        
+        do {
+            let data = try Data(contentsOf: url)
+            ref.putData(data, metadata: metadata) { _, error in
+                if let error = error {
+                    print("Audio Upload error: \(error.localizedDescription)")
+                    completion(nil)
+                    return
+                }
+                ref.downloadURL { url, error in
+                    if error != nil { completion(nil); return }
+                    completion(url?.absoluteString)
+                }
+            }
+        } catch {
+            print("Audio Read Error: \(error)")
+            completion(nil)
+        }
+    }
 
     // MARK: - Spots
     func fetchSpots(completion: @escaping ([CampingSpot]) -> Void) {

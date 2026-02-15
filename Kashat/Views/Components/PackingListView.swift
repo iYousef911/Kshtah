@@ -161,40 +161,36 @@ struct PackingListView: View {
     private func generateList() {
         isGenerating = true
         
-        // Simulate AI Processing time
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+        Task {
+            // Call Real AI Service
+            let aiItemsString = await AIService.shared.generatePackingList(
+                spotName: spot.name,
+                location: spot.location,
+                type: spot.type,
+                temperature: temperature
+            )
+            
+            // Map strings to PackingItems
             var items: [PackingItem] = []
             
-            // Basics
+            // 1. Add Basics (Always needed)
             items.append(PackingItem(name: "خيام (\(Int(ceil(Double(groupSize)/2.0))))", category: "Basics"))
             items.append(PackingItem(name: "ماء للشرب (\(groupSize * tripDuration * 3) لتر)", category: "Basics"))
-            items.append(PackingItem(name: "فرش نوم (\(groupSize))", category: "Basics"))
             
-            // Weather Based
+            // 2. Add AI Suggestions
+            for itemString in aiItemsString {
+                items.append(PackingItem(name: itemString, category: "AI Suggestion"))
+            }
+
+            // 3. Add Contextual extras based on manual checks (Hybrid approach)
             if temperature < 15 {
-                items.append(PackingItem(name: "ملابس شتوية ثقيلة", category: "Clothing"))
-                items.append(PackingItem(name: "حطب إضافي للتدفئة", category: "Heating"))
-            } else if temperature > 30 {
-                items.append(PackingItem(name: "مظلة شمسية", category: "Protection"))
-                items.append(PackingItem(name: "كريم واقي شمس", category: "Protection"))
+                items.append(PackingItem(name: "ملابس شتوية ثقيلة", category: "Weather"))
             }
             
-            // Terrain Based (Simple heuristic)
-            if spot.type == "كثبان" || spot.type == "صحراء" {
-                items.append(PackingItem(name: "منفخ هواء للكفرات", category: "Car"))
-                items.append(PackingItem(name: "اشتراك بطارية", category: "Car"))
-                items.append(PackingItem(name: "حبل سحب", category: "Car"))
-            } else if spot.type == "وادي" || spot.type == "جبل" {
-                items.append(PackingItem(name: "حذاء مشي مريح", category: "Clothing"))
-                items.append(PackingItem(name: "عصا مشي", category: "Gear"))
+            await MainActor.run {
+                self.generatedList = PackingList(name: "رحلة \(spot.name)", items: items)
+                self.isGenerating = false
             }
-            
-            // Food
-            items.append(PackingItem(name: "عدة قهوة وشاهي", category: "Food"))
-            items.append(PackingItem(name: "تمر وسكريات", category: "Food"))
-            
-            self.generatedList = PackingList(name: "رحلة \(spot.name)", items: items)
-            self.isGenerating = false
         }
     }
     

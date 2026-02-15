@@ -28,5 +28,7 @@
 	<string>نحتاج إلى الكاميرا لتحديد اتجاه القبلة بتقنية الواقع المعزز</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>نحتاج إلى الميكروفون لخاصية اللاسلكي في القافلة</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>نحتاج إلى التعرف على الكلام لتحويل رسائلك الصوتية إلى نص</string>
 </dict>
 </plist>

@@ -83,6 +83,7 @@ enum PingType: String, Codable {
     case coffee = "coffee"
     case general = "general"
     case alert = "alert"
+    case audio = "audio" // NEW: Walkie Talkie
 }
 
 struct ConvoyPing: Identifiable, Codable {
@@ -93,6 +94,22 @@ struct ConvoyPing: Identifiable, Codable {
     let timestamp: Date
     let latitude: Double
     let longitude: Double
+    let audioURL: String? // NEW
+    let audioDuration: Double? // NEW
+    let transcribedText: String? // NEW: AI Transcription
+    
+    init(id: String, memberId: String, memberName: String, type: PingType, timestamp: Date, latitude: Double, longitude: Double, audioURL: String? = nil, audioDuration: Double? = nil, transcribedText: String? = nil) {
+        self.id = id
+        self.memberId = memberId
+        self.memberName = memberName
+        self.type = type
+        self.timestamp = timestamp
+        self.latitude = latitude
+        self.longitude = longitude
+        self.audioURL = audioURL
+        self.audioDuration = audioDuration
+        self.transcribedText = transcribedText
+    }
     
     init?(dictionary: [String: Any]) {
         guard let id = dictionary["id"] as? String,
@@ -110,6 +127,9 @@ struct ConvoyPing: Identifiable, Codable {
         self.latitude = lat
         self.longitude = lon
         self.timestamp = (dictionary["timestamp"] as? Timestamp)?.dateValue() ?? Date()
+        self.audioURL = dictionary["audioURL"] as? String
+        self.audioDuration = dictionary["audioDuration"] as? Double
+        self.transcribedText = dictionary["transcribedText"] as? String
     }
     
     var coordinate: CLLocationCoordinate2D {

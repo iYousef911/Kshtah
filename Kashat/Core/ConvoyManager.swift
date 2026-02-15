@@ -73,8 +73,8 @@ class ConvoyManager: ObservableObject {
         }
     }
     
-    func sendPing(type: PingType, memberId: String, memberName: String, lat: Double, lon: Double, convoyId: String) {
-        let data: [String: Any] = [
+    func sendPing(type: PingType, memberId: String, memberName: String, lat: Double, lon: Double, convoyId: String, audioURL: String? = nil, duration: Double? = nil, transcribedText: String? = nil) {
+        var data: [String: Any] = [
             "id": UUID().uuidString,
             "memberId": memberId,
             "memberName": memberName,
@@ -83,6 +83,16 @@ class ConvoyManager: ObservableObject {
             "latitude": lat,
             "longitude": lon
         ]
+        
+        if let audioURL = audioURL {
+            data["audioURL"] = audioURL
+        }
+        if let duration = duration {
+            data["audioDuration"] = duration
+        }
+        if let transcribedText = transcribedText {
+            data["transcribedText"] = transcribedText
+        }
         
         db.collection("convoys").document(convoyId).collection("pings").addDocument(data: data) { error in
             if let error = error {
@@ -95,12 +105,18 @@ class ConvoyManager: ObservableObject {
                 let recipientIds = self.members.filter { $0.id != memberId }.map { $0.id }
                 
                 let title = "🚨 نداء قافلة!"
-                let message: String
+                var message: String
                 switch type {
                 case .stuck: message = "\(memberName): أنا عالق، أحتاج مساعدة! 🆘"
                 case .coffee: message = "\(memberName): وقت القهوة! ☕️"
                 case .general: message = "\(memberName): نداء عام 👋"
                 case .alert: message = "\(memberName): انتبهوا للطريق! ⚠️"
+                case .audio:
+                    if let text = transcribedText {
+                         message = "\(memberName): \"\(text)\" 🎙️" // AI Powered Notification
+                    } else {
+                        message = "\(memberName): رسالة صوتية 🎙️"
+                    }
                 }
 
                 
@@ -111,6 +127,17 @@ class ConvoyManager: ObservableObject {
                     data: ["type": "convoy_ping"]
                 )
             }
+        }
+    }
+    
+    // NEW: Audio Helper
+    func sendAudioPing(url: URL, duration: Double, memberId: String, memberName: String, lat: Double, lon: Double, convoyId: String, transcribedText: String? = nil) {
+        // 1. Upload Audio
+        FirebaseManager.shared.uploadAudio(url: url, folder: "convoy_audio/\(convoyId)") { [weak self] downloadURL in
+            guard let downloadURL = downloadURL else { return }
+            
+            // 2. Send Ping
+            self?.sendPing(type: .audio, memberId: memberId, memberName: memberName, lat: lat, lon: lon, convoyId: convoyId, audioURL: downloadURL, duration: duration, transcribedText: transcribedText)
         }
     }
     

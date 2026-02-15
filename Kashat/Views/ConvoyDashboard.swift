@@ -4,6 +4,7 @@ import AudioToolbox
 import StoreKit
 
 struct ConvoyDashboard: View {
+    @StateObject private var voiceManager = VoiceNoteManager() // NEW: Audio Manager
     @StateObject private var manager = ConvoyManager()
     @EnvironmentObject var store: AppDataStore
     @EnvironmentObject var settings: SettingsManager
@@ -84,13 +85,52 @@ struct ConvoyDashboard: View {
                 // Pings List
                 if let lastPing = manager.pings.first {
                     HStack {
-                        Image(systemName: pingIcon(for: lastPing.type))
-                            .foregroundStyle(.red)
-                        VStack(alignment: .leading) {
-                            Text(lastPing.memberName)
-                                .font(.caption.bold())
-                            Text(pingText(for: lastPing.type))
-                                .font(.caption2)
+                        if lastPing.type == .audio {
+                            // Audio Player View
+                            HStack {
+                                Image(systemName: "mic.fill")
+                                    .foregroundStyle(.white)
+                                    .padding(8)
+                                    .background(Color.blue)
+                                    .clipShape(Circle())
+                                
+                                VStack(alignment: .leading) {
+                                    Text(lastPing.memberName)
+                                        .font(.caption.bold())
+                                        .foregroundStyle(.white)
+                                    if let text = lastPing.transcribedText {
+                                        Text(text) // Display Transcription
+                                            .font(.caption2)
+                                            .foregroundStyle(.white)
+                                            .lineLimit(1)
+                                    } else {
+                                        Text("رسالة صوتية 🎙️")
+                                            .font(.caption2)
+                                            .foregroundStyle(.white.opacity(0.8))
+                                    }
+                                }
+                                
+                                Spacer()
+                                
+                                Button(action: {
+                                    if let url = lastPing.audioURL {
+                                        voiceManager.playRemoteAudio(urlString: url)
+                                    }
+                                }) {
+                                    Image(systemName: "play.circle.fill")
+                                        .font(.title2)
+                                        .foregroundStyle(.white)
+                                }
+                            }
+                        } else {
+                            Image(systemName: pingIcon(for: lastPing.type))
+                                .foregroundStyle(.red)
+                            VStack(alignment: .leading) {
+                                Text(lastPing.memberName)
+                                    .font(.caption.bold())
+                                Text(pingText(for: lastPing.type))
+                                    .font(.caption2)
+                            }
                         }
                         Spacer()
                     }
@@ -98,22 +138,50 @@ struct ConvoyDashboard: View {
                     .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16))
                     .padding(.horizontal)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .id(lastPing.id) // Force refresh on new ping
                 }
                 
                 // Action Bar (Walkie-Talkie)
-                HStack(spacing: 15) {
-                    PingButton(icon: "alert.fill", color: .red) {
-                        sendPing(.stuck)
+                HStack(spacing: 20) {
+                    // Quick Pings (Mini)
+                    VStack(spacing: 10) {
+                        MiniPingButton(icon: "exclamationmark.triangle.fill", color: .red) { sendPing(.stuck) }
+                        MiniPingButton(icon: "cup.and.saucer.fill", color: .orange) { sendPing(.coffee) }
                     }
-                    PingButton(icon: "cup.and.saucer.fill", color: .orange) {
-                        sendPing(.coffee)
-                    }
-                    PingButton(icon: "hand.wave.fill", color: .green) {
-                        sendPing(.general)
+                                        
+                    Spacer()
+                    
+                    // BIG Push-to-Talk Button
+                    VStack {
+                        Text(voiceManager.isRecording ? "إطلاق للإرسال" : "إضغط للتحدث")
+                            .font(.caption2)
+                            .foregroundStyle(.white)
+                            .opacity(0.8)
+                        
+                        ZStack {
+                            Circle()
+                                .fill(voiceManager.isRecording ? Color.red : Color.blue)
+                                .frame(width: 80, height: 80)
+                                .shadow(color: voiceManager.isRecording ? .red.opacity(0.5) : .blue.opacity(0.5), radius: 10)
+                                .scaleEffect(voiceManager.isRecording ? 1.2 : 1.0)
+                                .animation(.easeInOut(duration: 0.2), value: voiceManager.isRecording)
+                            
+                            Image(systemName: "mic.fill")
+                                .font(.largeTitle)
+                                .foregroundStyle(.white)
+                        }
+                        .onLongPressGesture(minimumDuration: 0.2, pressing: { isPressing in
+                            if isPressing {
+                                startRecording()
+                            } else {
+                                stopRecordingAndSend()
+                            }
+                        }) {}
                     }
                     
                     Spacer()
                     
+                    // Info
                     VStack(alignment: .trailing, spacing: 2) {
                         Text("\(manager.members.count) " + settings.t("متصلين"))
                             .font(.caption2.bold())
@@ -124,8 +192,9 @@ struct ConvoyDashboard: View {
                     .foregroundStyle(.white)
                 }
                 .padding()
-                .glassEffect(.regular, in: Capsule())
+                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 25))
                 .padding()
+                .padding(.bottom, 20)
             }
         }
         .onAppear {
@@ -152,6 +221,43 @@ struct ConvoyDashboard: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("NewConvoyPing"))) { _ in
             triggerFeedback(isOutgoing: false)
+            
+            // Auto-play audio if new ping is audio
+            if let latest = manager.pings.first, latest.type == .audio, let url = latest.audioURL {
+                 // Optional: Auto-play logic could go here, but usually risky for UX. Let's stick to manual play or just sound effect.
+            }
+        }
+    }
+    
+    // MARK: - Audio Logic
+    private func startRecording() {
+        triggerFeedback(isOutgoing: true)
+        voiceManager.startRecording()
+    }
+    
+    private func stopRecordingAndSend() {
+        voiceManager.stopRecording { url, duration in
+            guard let url = url, let user = store.userProfile else { return }
+            
+            // Minimum duration check
+            if duration < 0.5 { return }
+            
+            // AI Transcription
+            voiceManager.transcribeAudio(url: url) { transcribedText in
+                // Send with transcription
+                manager.sendAudioPing(
+                    url: url,
+                    duration: duration,
+                    memberId: user.id,
+                    memberName: user.name,
+                    lat: LocationManager.shared.userLocation?.coordinate.latitude ?? 0,
+                    lon: LocationManager.shared.userLocation?.coordinate.longitude ?? 0,
+                    convoyId: convoyId,
+                    transcribedText: transcribedText // Pass Text
+                )
+            }
+            
+            triggerFeedback(isOutgoing: true)
         }
     }
     
@@ -161,7 +267,7 @@ struct ConvoyDashboard: View {
         generator.impactOccurred()
         
         // Play system sound: 1004 is 'Sent Message', 1003 is 'Received Message'
-        let soundId: SystemSoundID = isOutgoing ? 1004 : 1003
+        let soundId: SystemSoundID = isOutgoing ? 1113 : 1114 // Walkie Talkie sounds (approximated)
         AudioServicesPlaySystemSound(soundId)
     }
     
@@ -182,7 +288,7 @@ struct ConvoyDashboard: View {
         store.successfulActionsCount += 1
         if store.successfulActionsCount >= 3 {
             if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-                SKStoreReviewController.requestReview(in: scene)
+                AppStore.requestReview(in: scene)
             }
         }
     }
@@ -193,6 +299,7 @@ struct ConvoyDashboard: View {
         case .coffee: return "cup.and.saucer.fill"
         case .general: return "hand.wave.fill"
         case .alert: return "bell.fill"
+        case .audio: return "mic.fill"
         }
     }
     
@@ -202,11 +309,12 @@ struct ConvoyDashboard: View {
         case .coffee: return settings.t("تعالوا نتقهوى هنا ☕️")
         case .general: return settings.t("أنا هنا!")
         case .alert: return settings.t("انتبهوا!")
+        case .audio: return settings.t("رسالة صوتية")
         }
     }
 }
 
-struct PingButton: View {
+struct MiniPingButton: View {
     let icon: String
     let color: Color
     let action: () -> Void
@@ -214,10 +322,10 @@ struct PingButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.title2)
+                .font(.caption)
                 .foregroundStyle(.white)
-                .frame(width: 50, height: 50)
-                .background(color)
+                .frame(width: 40, height: 40)
+                .background(color.opacity(0.8))
                 .clipShape(Circle())
         }
     }

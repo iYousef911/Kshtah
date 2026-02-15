@@ -119,6 +119,17 @@ class AppDataStore: ObservableObject {
                 }
             }
         }
+        
+        // 4. Listen for Real-time Subscription Changes
+        SubscriptionManager.shared.$isPro
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isPro in
+                print("💎 AppDataStore: Syncing Pro Status -> \(isPro)")
+                if self?.userProfile != nil {
+                    self?.userProfile?.isPro = isPro
+                }
+            }
+            .store(in: &cancellables)
     }
     
     // MARK: - Gear Logic
@@ -171,7 +182,25 @@ class AppDataStore: ObservableObject {
         // Explicit Type: (threads: [ChatThread])
         firebase.fetchUserChats(uid: uid) { [weak self] (threads: [ChatThread]) in
             DispatchQueue.main.async {
-                self?.chats = threads
+                var allChats = threads
+                
+                // NEW: Inject "Kashat Guide" Bot
+                let botThread = ChatThread(
+                    id: "local_kashat_bot_thread",
+                    otherUserName: "خبير كشتة 🤖", // The Bot Name
+                    otherUserImage: "sparkles", // SF Symbol
+                    otherUserId: "kashat_guide_bot",
+                    messages: [], // Local only
+                    lastMessageText: "مرحباً! أنا هنا لمساعدتك في التخطيط لرحلتك القادمة.",
+                    lastMessageTime: Date()
+                )
+                
+                // Ensure bot is always at the top or present
+                if !allChats.contains(where: { $0.otherUserId == "kashat_guide_bot" }) {
+                    allChats.insert(botThread, at: 0)
+                }
+                
+                self?.chats = allChats
             }
         }
     }
@@ -183,6 +212,19 @@ class AppDataStore: ObservableObject {
 
     func openChat(with otherUserId: String) {
         self.activeThreadMessages = []
+        
+        // NEW: Bot Logic
+        if otherUserId == "kashat_guide_bot" {
+            // Load initial/fake messages for the bot
+            let welcomeMsg = ChatMessage(
+                id: UUID(), // FIXED: Use UUID directly
+                text: "حياك الله! 👋 أنا خبير كشتة. آمرني، تبي خطة، نصيحة، أو تعرف وين تكشت اليوم؟",
+                senderId: "kashat_guide_bot",
+                timestamp: Date()
+            )
+            self.activeThreadMessages = [welcomeMsg]
+            return // Stop execution, don't hit Firebase
+        }
         
         // Fix Ambiguity: Explicit type for threadId
         firebase.getChatThreadId(otherUserId: otherUserId) { [weak self] (threadId: String) in
@@ -210,6 +252,45 @@ class AppDataStore: ObservableObject {
     }
     
     func sendMessage(otherUserId: String, text: String) {
+        // NEW: Bot Logic
+        if otherUserId == "kashat_guide_bot" {
+            guard let currentUid = firebase.user?.uid else { return }
+            
+            // 1. Add User Message Locally
+            let userMsg = ChatMessage(
+                id: UUID(), // FIXED: Use UUID directly
+                text: text,
+                senderId: currentUid,
+                timestamp: Date()
+            )
+            withAnimation {
+                self.activeThreadMessages.append(userMsg)
+            }
+            
+            // 2. Simulate Typing / Call AI
+            Task {
+                // Delay slightly for realism
+                try? await Task.sleep(nanoseconds: 1 * 1_000_000_000)
+                
+                let responseText = await AIService.shared.askGuide(query: text)
+                
+                // 3. Add Bot Response
+                let botMsg = ChatMessage(
+                    id: UUID(), // FIXED: Use UUID directly
+                    text: responseText,
+                    senderId: "kashat_guide_bot",
+                    timestamp: Date()
+                )
+                
+                await MainActor.run {
+                    withAnimation {
+                        self.activeThreadMessages.append(botMsg)
+                    }
+                }
+            }
+            return
+        }
+        
         // Fix Ambiguity: Explicit type for threadId
         firebase.getChatThreadId(otherUserId: otherUserId) { [weak self] (threadId: String) in
             self?.firebase.sendMessage(threadId: threadId, text: text)

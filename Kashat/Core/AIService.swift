@@ -161,6 +161,49 @@ class AIService {
         return "للأسف تعذر تجهيز الخطة الآن. تأكد من اتصالك بالإنترنت وحاول مرة أخرى." // Fallback
     }
     
+    // NEW: Generic Chat for "Kashat Guide" Bot
+    func askGuide(query: String) async -> String {
+        // Gate for PRO Users
+        guard SubscriptionManager.shared.isPro else {
+            return "مرحباً! أنا خبير كشتة الذكي 🤖. هذه الميزة متاحة فقط للمشتركين في PRO. اشترك الآن للحصول على نصائح وتوجيهات فورية لرحلاتك!"
+        }
+        
+        // System Prompt to define persona
+        let systemPrompt = """
+        أنت "خبير كشتة"، مساعد ذكي متخصص في التخييم والرحلات البرية في السعودية.
+        تتحدث بلهجة سعودية بيضاء ودودة.
+        مهامك: اقتراح أماكن، نصائح تجهيز، وصفات طبخ برية، معلومات عن الطقس والنجوم.
+        إذا سألك المستخدم عن شيء خارج نطاق التخييم والسياحة في السعودية، اعتذر منه بلطف وقل أنك متخصص فقط في الكشتات.
+        إجاباتك يجب أن تكون مختصرة ومفيدة.
+        """
+        
+        let prompt = "\(systemPrompt)\n\nالمستخدم: \(query)\nخبير كشتة:"
+        
+        var request = URLRequest(url: workerURL)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: Any] = [
+            "prompt": prompt,
+            "temperature": 0.7
+        ]
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+            let (data, response) = try await session.data(for: request)
+            
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200,
+               let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let content = json["content"] as? String {
+                return content
+            }
+        } catch {
+            print("⚠️ Chat Guide Error: \(error)")
+        }
+        
+        return "المعذرة، واجهت مشكلة في الاتصال. حاول مرة ثانية بعد شوي! 🙏"
+    }
+    
     private func fallbackInsight(temperature: Double) -> String {
         // Fallback context-aware logic if API fails or no key
         if temperature < 15 {
