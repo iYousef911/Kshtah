@@ -11,6 +11,7 @@ import FirebaseAuth
 import FirebaseMessaging // NEW IMPORT
 import OneSignalFramework
 import SuperwallKit
+import GoogleMobileAds // NEW IMPORT
 
 class AppDelegate: NSObject, UIApplicationDelegate, MessagingDelegate { // NEW Protocol
     func application(_ application: UIApplication,
@@ -40,6 +41,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, MessagingDelegate { // NEW P
         // Initialize Superwall (Kashat PRO)
         // REPLACE with your actual Superwall API Key
         SubscriptionManager.shared.configure(apiKey: "pk_pH9m0yDYMxyMNhrQd3qjE")
+        
+        // Initialize Google Mobile Ads SDK
+        GADMobileAds.sharedInstance().start(completionHandler: nil)
         
         return true
     }

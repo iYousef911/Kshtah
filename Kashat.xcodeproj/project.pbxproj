@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D921F06A2F49080A00587F53 /* app-ads.txt in Resources */ = {isa = PBXBuildFile; fileRef = D921F0692F49080000587F53 /* app-ads.txt */; };
+		D921F06F2F49094100587F53 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = D921F06E2F49094100587F53 /* GoogleMobileAds */; };
 		D92EA4212ED36E9800B61312 /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = D92EA4202ED36E9800B61312 /* FirebaseAI */; };
 		D92EA4232ED36E9800B61312 /* FirebaseAILogic in Frameworks */ = {isa = PBXBuildFile; productRef = D92EA4222ED36E9800B61312 /* FirebaseAILogic */; };
 		D92EA4252ED36E9800B61312 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = D92EA4242ED36E9800B61312 /* FirebaseAnalytics */; };
@@ -60,6 +62,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D921F0692F49080000587F53 /* app-ads.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "app-ads.txt"; sourceTree = "<group>"; };
 		D92EA4482ED3771C00B61312 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		D9ACBE812ED0FB3E001D8142 /* Kashat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Kashat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9EF38922F1AA24A00672131 /* OneSignalNotificationServiceExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OneSignalNotificationServiceExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -123,6 +126,7 @@
 				D92EA4312ED36E9800B61312 /* FirebaseDatabase in Frameworks */,
 				D92EA4412ED36E9800B61312 /* FirebaseStorage in Frameworks */,
 				D92EA4292ED36E9800B61312 /* FirebaseAppCheck in Frameworks */,
+				D921F06F2F49094100587F53 /* GoogleMobileAds in Frameworks */,
 				D9EF38872F1AA18300672131 /* OneSignalExtension in Frameworks */,
 				D9EF388D2F1AA18300672131 /* OneSignalLocation in Frameworks */,
 				D9EF38892F1AA18300672131 /* OneSignalFramework in Frameworks */,
@@ -146,6 +150,7 @@
 		D9ACBE782ED0FB3E001D8142 = {
 			isa = PBXGroup;
 			children = (
+				D921F0692F49080000587F53 /* app-ads.txt */,
 				D92EA4482ED3771C00B61312 /* GoogleService-Info.plist */,
 				D9ACBE832ED0FB3E001D8142 /* Kashat */,
 				D9EF38932F1AA24A00672131 /* OneSignalNotificationServiceExtension */,
@@ -208,6 +213,7 @@
 				D9EF388A2F1AA18300672131 /* OneSignalInAppMessages */,
 				D9EF388C2F1AA18300672131 /* OneSignalLocation */,
 				D9F707EF2F2E4F9B00BAC086 /* SuperwallKit */,
+				D921F06E2F49094100587F53 /* GoogleMobileAds */,
 			);
 			productName = Kashat;
 			productReference = D9ACBE812ED0FB3E001D8142 /* Kashat.app */;
@@ -268,6 +274,7 @@
 				D96728C22EFADEAB00759F95 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 				D9EF38852F1AA18300672131 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */,
 				D9F707EE2F2E4F9B00BAC086 /* XCRemoteSwiftPackageReference "Superwall-iOS" */,
+				D921F06D2F49094100587F53 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D9ACBE822ED0FB3E001D8142 /* Products */;
@@ -286,6 +293,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D92EA4492ED3771C00B61312 /* GoogleService-Info.plist in Resources */,
+				D921F06A2F49080A00587F53 /* app-ads.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -666,6 +674,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		D921F06D2F49094100587F53 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.0.0;
+			};
+		};
 		D92EA41F2ED36E9800B61312 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -701,6 +717,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		D921F06E2F49094100587F53 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D921F06D2F49094100587F53 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
 		D92EA4202ED36E9800B61312 /* FirebaseAI */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = D92EA41F2ED36E9800B61312 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;

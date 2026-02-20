@@ -380,6 +380,11 @@ struct HomeFeedContent: View {
                         .padding(.horizontal)
                     }
                     
+                    // AdMob Banner
+                    BannerAdView()
+                        .frame(height: 50)
+                        .padding(.vertical, 10)
+                        
                     // NEW: Smart Recommendations Section (Entrance Animation 2)
                     if !store.recommendedSpots.isEmpty {
                         VStack(alignment: .leading) {

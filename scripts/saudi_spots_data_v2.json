@@ -1,5 +1,15 @@
 [
     {
+        "name": "وادي نمار",
+        "location": "الرياض",
+        "type": "وادي",
+        "latitude": 24.5865,
+        "longitude": 46.6934,
+        "rating": 4.8,
+        "numberOfRatings": 150,
+        "imageURL": "https://loremflickr.com/800/600/saudi,wadi,namar?random=1"
+    },
+    {
         "name": "جبال الشفا",
         "location": "الطائف",
         "type": "جبل",
@@ -23,8 +33,8 @@
         "name": "وادي حنيفة",
         "location": "الرياض",
         "type": "وادي",
-        "latitude": 24.600,
-        "longitude": 46.550,
+        "latitude": 24.6468,
+        "longitude": 46.5926,
         "rating": 4.5,
         "numberOfRatings": 400,
         "imageURL": "https://loremflickr.com/800/600/saudi,valley,river?random=3"
