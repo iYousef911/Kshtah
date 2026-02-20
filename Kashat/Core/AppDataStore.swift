@@ -272,7 +272,7 @@ class AppDataStore: ObservableObject {
                 // Delay slightly for realism
                 try? await Task.sleep(nanoseconds: 1 * 1_000_000_000)
                 
-                let responseText = await AIService.shared.askGuide(query: text)
+                let responseText = await AIService.shared.askGuide(query: text, isPro: self.userProfile?.isPro ?? false)
                 
                 // 3. Add Bot Response
                 let botMsg = ChatMessage(

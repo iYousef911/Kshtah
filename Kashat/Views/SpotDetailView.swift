@@ -22,6 +22,8 @@ struct SpotDetailView: View {
     @State private var newCommentText = ""
     @State private var newRating = 5
     
+    @StateObject private var nativeAdViewModel = NativeAdViewModel() // NEW: Native Ad
+    
     @State private var showMapSelection = false
     @State private var showShareSheet = false
     @State private var shareImagePreview: UIImage?
@@ -91,7 +93,10 @@ struct SpotDetailView: View {
             }
             .navigationTitle("").toolbarBackground(.hidden, for: .navigationBar)
             .toolbar { toolbarContent }
-            .onAppear { store.loadComments(for: spot.id) }
+            .onAppear { 
+                store.loadComments(for: spot.id) 
+                nativeAdViewModel.refreshAd()
+            }
             .task { await fetchWeatherData() }
         }
         .navigationDestination(isPresented: $navigateToChat) {
@@ -172,6 +177,20 @@ struct SpotDetailView: View {
                 onShowConvoy: { showConvoy = true }
             )
             
+            // Inject Native Ad ONLY for free users
+            if !(store.userProfile?.isPro ?? false) {
+                if let nativeAd = nativeAdViewModel.nativeAds.first { 
+                    AdMobNativeView(nativeAd: nativeAd)
+                        .frame(height: 110)
+                        .padding(.horizontal)
+                } else if nativeAdViewModel.isLoading {
+                    RoundedRectangle(cornerRadius: 24)
+                        .fill(Color.white.opacity(0.05))
+                        .frame(height: 110)
+                        .padding(.horizontal)
+                }
+            }
+            
             SpotCommentsSection(spot: spot, newCommentText: $newCommentText, newRating: $newRating, selectedItem: $selectedItem, selectedImageData: $selectedImageData, onSubmit: submitComment) { userId, userName in
                 startChat(with: userId, userName: userName)
             }
@@ -214,7 +233,8 @@ struct SpotDetailView: View {
             temperature: temp, 
             condition: weather.currentWeather.condition.description,
             moonPhase: moonToUse.name,
-            moonIllumination: moonToUse.illumination
+            moonIllumination: moonToUse.illumination,
+            isPro: store.userProfile?.isPro ?? false
         )
         
         await MainActor.run {

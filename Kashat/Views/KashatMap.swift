@@ -287,6 +287,16 @@ struct KashatMap: View {
             }
             .padding(.horizontal)
             
+            // Map Banner Ad overlay ONLY for free users
+            if !(store.userProfile?.isPro ?? false) {
+                BannerAdView()
+                    .frame(width: 320, height: 50)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
+                    .padding(.top, 16)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+            
             Spacer()
             
             // Severe Weather Alert

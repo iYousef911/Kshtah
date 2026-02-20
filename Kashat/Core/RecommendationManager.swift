@@ -118,7 +118,8 @@ class RecommendationManager {
                     spotName: rec.spot.name,
                     location: rec.spot.location,
                     temperature: rec.temperature,
-                    condition: rec.condition
+                    condition: rec.condition,
+                    isPro: true
                 )
             } else {
                 insight = "توصية بناءً على الأجواء الممتازة!" // Simple non-AI insight

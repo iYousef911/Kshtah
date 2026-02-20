@@ -161,6 +161,7 @@ struct HomeFeedContent: View {
     @Binding var showChatDashboard: Bool // NEW: Binding
     @Binding var showAIItinerary: Bool
     @Binding var weatherAlert: (type: String, speed: Int)?
+    @StateObject private var nativeAdViewModel = NativeAdViewModel()
     
     // Live User Name
     var userName: String {
@@ -380,10 +381,7 @@ struct HomeFeedContent: View {
                         .padding(.horizontal)
                     }
                     
-                    // AdMob Banner
-                    BannerAdView()
-                        .frame(height: 50)
-                        .padding(.vertical, 10)
+                    // (Standalone AdMob Banner removed, now interleaved in spots list)
                         
                     // NEW: Smart Recommendations Section (Entrance Animation 2)
                     if !store.recommendedSpots.isEmpty {
@@ -454,7 +452,7 @@ struct HomeFeedContent: View {
                             .foregroundStyle(Color.white)
                             .padding(.horizontal)
                         
-                        ForEach(filteredSpots) { spot in
+                        ForEach(Array(filteredSpots.enumerated()), id: \.element.id) { index, spot in
                             GlassSpotCard(spot: spot)
                                 .padding(.horizontal)
                                 .padding(.bottom, 10)
@@ -465,6 +463,26 @@ struct HomeFeedContent: View {
                                     generator.impactOccurred()
                                 }
                                 .transition(.scale(scale: 0.9).combined(with: .opacity))
+                                
+                            // Inject Native Ad every 4 spots (after 3rd, 7th, 11th...) ONLY for free users
+                            if !(store.userProfile?.isPro ?? false) && (index + 1) % 4 == 0 {
+                                let adIndex = index / 4
+                                if !nativeAdViewModel.nativeAds.isEmpty {
+                                    // Loop through available ads
+                                    let safeIndex = adIndex % nativeAdViewModel.nativeAds.count
+                                    AdMobNativeView(nativeAd: nativeAdViewModel.nativeAds[safeIndex])
+                                        .frame(height: 110) // Matches GlassSpotCard approximate height
+                                        .padding(.horizontal)
+                                        .padding(.bottom, 10)
+                                        .transition(.opacity)
+                                } else if nativeAdViewModel.isLoading {
+                                    RoundedRectangle(cornerRadius: 24)
+                                        .fill(Color.white.opacity(0.05))
+                                        .frame(height: 110)
+                                        .padding(.horizontal)
+                                        .padding(.bottom, 10)
+                                }
+                            }
                         }
                     } else {
                         VStack(spacing: 12) {
@@ -501,6 +519,9 @@ struct HomeFeedContent: View {
                 }
                 .padding(.top)
                 .padding(.bottom, 100)
+                .onAppear {
+                    nativeAdViewModel.refreshAd()
+                }
             }
         }
         .toolbar(.hidden, for: .navigationBar)

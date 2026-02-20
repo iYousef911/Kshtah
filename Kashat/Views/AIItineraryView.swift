@@ -126,7 +126,8 @@ struct AIItineraryView: View {
             let result = await AIService.shared.generateItinerary(
                 carType: carType,
                 duration: duration,
-                groupSize: groupSize
+                groupSize: groupSize,
+                isPro: store.userProfile?.isPro ?? false
             )
             
             await MainActor.run {

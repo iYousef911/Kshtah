@@ -43,7 +43,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, MessagingDelegate { // NEW P
         SubscriptionManager.shared.configure(apiKey: "pk_pH9m0yDYMxyMNhrQd3qjE")
         
         // Initialize Google Mobile Ads SDK
-        GADMobileAds.sharedInstance().start(completionHandler: nil)
+        MobileAds.shared.start(completionHandler: nil)
         
         return true
     }

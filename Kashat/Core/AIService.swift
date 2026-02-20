@@ -19,9 +19,9 @@ class AIService {
     // Simple in-memory cache to save tokens
     private var insightCache: [String: String] = [:]
     
-    func generateInsight(spotName: String, location: String, temperature: Double, condition: String, moonPhase: String? = nil, moonIllumination: Int? = nil) async -> String {
+    func generateInsight(spotName: String, location: String, temperature: Double, condition: String, moonPhase: String? = nil, moonIllumination: Int? = nil, isPro: Bool) async -> String {
         // 0. Gate for PRO Users
-        guard SubscriptionManager.shared.isPro else {
+        guard isPro else {
             return fallbackInsight(temperature: temperature)
         }
 
@@ -80,9 +80,9 @@ class AIService {
         return fallbackInsight(temperature: temperature)
     }
     
-    func generatePackingList(spotName: String, location: String, type: String, temperature: Double) async -> [String] {
+    func generatePackingList(spotName: String, location: String, type: String, temperature: Double, isPro: Bool) async -> [String] {
         // Gate for PRO Users
-        guard SubscriptionManager.shared.isPro else {
+        guard isPro else {
             return ["ماء", "خيمة", "حطب", "فرشة", "كشاف", "شاحن"] // Immediate Fallback
         }
 
@@ -120,9 +120,9 @@ class AIService {
         return ["ماء", "خيمة", "حطب", "فرشة", "كشاف", "شاحن"] // Fallback
     }
     
-    func generateItinerary(carType: String, duration: Int, groupSize: Int) async -> String {
+    func generateItinerary(carType: String, duration: Int, groupSize: Int, isPro: Bool) async -> String {
         // Gate for PRO Users
-        guard SubscriptionManager.shared.isPro else {
+        guard isPro else {
             return "هذه الميزة حصرية للمشتركين. اشترك في PRO للحصول على خطط كشتة ذكية ومخصصة!"
         }
 
@@ -162,9 +162,9 @@ class AIService {
     }
     
     // NEW: Generic Chat for "Kashat Guide" Bot
-    func askGuide(query: String) async -> String {
+    func askGuide(query: String, isPro: Bool) async -> String {
         // Gate for PRO Users
-        guard SubscriptionManager.shared.isPro else {
+        guard isPro else {
             return "مرحباً! أنا خبير كشتة الذكي 🤖. هذه الميزة متاحة فقط للمشتركين في PRO. اشترك الآن للحصول على نصائح وتوجيهات فورية لرحلاتك!"
         }
         

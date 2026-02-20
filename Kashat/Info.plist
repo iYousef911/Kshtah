@@ -31,7 +31,7 @@
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>نحتاج إلى التعرف على الكلام لتحويل رسائلك الصوتية إلى نص</string>
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<string>ca-app-pub-3298644446787962~9458464567</string>
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict>

@@ -167,7 +167,8 @@ struct PackingListView: View {
                 spotName: spot.name,
                 location: spot.location,
                 type: spot.type,
-                temperature: temperature
+                temperature: temperature,
+                isPro: isPro
             )
             
             // Map strings to PackingItems
