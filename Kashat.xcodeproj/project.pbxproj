@@ -150,11 +150,11 @@
 		D9ACBE782ED0FB3E001D8142 = {
 			isa = PBXGroup;
 			children = (
-				D921F0692F49080000587F53 /* app-ads.txt */,
 				D92EA4482ED3771C00B61312 /* GoogleService-Info.plist */,
 				D9ACBE832ED0FB3E001D8142 /* Kashat */,
 				D9EF38932F1AA24A00672131 /* OneSignalNotificationServiceExtension */,
 				D9ACBE822ED0FB3E001D8142 /* Products */,
+				D921F0692F49080000587F53 /* app-ads.txt */,
 			);
 			sourceTree = "<group>";
 		};
