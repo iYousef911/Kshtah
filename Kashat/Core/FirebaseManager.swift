@@ -446,7 +446,7 @@ class FirebaseManager: ObservableObject {
         }
     }
     
-    func sendMessage(threadId: String, text: String) {
+    func sendMessage(threadId: String, text: String, otherUserId: String) {
         guard let currentUid = user?.uid else { return }
         let msgData: [String: Any] = [
             "id": UUID().uuidString,
@@ -457,7 +457,14 @@ class FirebaseManager: ObservableObject {
         db.collection("chats").document(threadId).collection("messages").addDocument(data: msgData)
         db.collection("chats").document(threadId).updateData([
             "lastMessageText": text,
-            "lastMessageTime": Timestamp(date: Date())
+            "lastMessageTime": Timestamp(date: Date()),
+            "unreadCount_\(otherUserId)": FieldValue.increment(Int64(1))
+        ])
+    }
+    
+    func markChatAsRead(threadId: String, uid: String) {
+        db.collection("chats").document(threadId).updateData([
+            "unreadCount_\(uid)": 0
         ])
     }
     
@@ -490,6 +497,7 @@ class FirebaseManager: ObservableObject {
                     
                     let lastText = data["lastMessageText"] as? String ?? ""
                     let lastTime = (data["lastMessageTime"] as? Timestamp)?.dateValue() ?? Date()
+                    let unread = data["unreadCount_\(uid)"] as? Int ?? 0
                     
                     return ChatThread(
                         id: doc.documentID,
@@ -498,7 +506,8 @@ class FirebaseManager: ObservableObject {
                         otherUserId: otherUserId,
                         messages: [],
                         lastMessageText: lastText,
-                        lastMessageTime: lastTime
+                        lastMessageTime: lastTime,
+                        unreadCount: unread
                     )
                 }
                 completion(threads)
@@ -760,6 +769,7 @@ class FirebaseManager: ObservableObject {
                     numberOfRatings: data["numberOfRatings"] as? Int ?? 0,
                     coordinate: CLLocationCoordinate2D(latitude: lat, longitude: long),
                     imageURL: data["imageURL"] as? String,
+                    isSpecial: data["isSpecial"] as? Bool ?? false,
                     isProOnly: data["isProOnly"] as? Bool ?? false,
                     aiInsight: data["aiInsight"] as? String,
                     bortleScale: data["bortleScale"] as? Int,

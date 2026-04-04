@@ -34,15 +34,17 @@ struct ChatRoomsList: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
-                ForEach(store.chatRooms) { room in
-                    NavigationLink(destination: GroupChatView(room: room)) {
-                        RoomRow(room: room)
+            GlassEffectContainer(spacing: 16) {
+                VStack(spacing: 16) {
+                    ForEach(store.chatRooms) { room in
+                        NavigationLink(destination: GroupChatView(room: room)) {
+                            RoomRow(room: room)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
+                .padding()
             }
-            .padding()
         }
     }
 }
@@ -79,7 +81,7 @@ struct RoomRow: View {
             }
         }
         .padding()
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 18))
+        .glassEffect(.regular, in: .rect(cornerRadius: 18))
     }
 }
 
@@ -164,8 +166,8 @@ struct GroupChatView: View {
                         
                         TextField(settings.t("اكتب شيئاً..."), text: $messageText)
                             .padding(12)
-                            .background(Color.white.opacity(0.1))
-                            .clipShape(Capsule())
+                            .background(.ultraThinMaterial)
+                            .clipShape(.capsule)
                             .foregroundStyle(.white)
                         
                         Button(action: sendMessage) {
@@ -173,8 +175,8 @@ struct GroupChatView: View {
                                 .font(.title3)
                                 .foregroundStyle(.blue)
                                 .padding(10)
-                                .background(Color.white.opacity(0.1))
-                                .clipShape(Circle())
+                                .background(.ultraThinMaterial)
+                                .clipShape(.circle)
                         }
                         .disabled(messageText.trimmingCharacters(in: .whitespaces).isEmpty)
                     }
@@ -276,8 +278,8 @@ struct GroupMessageBubble: View {
                             .lineLimit(1)
                     }
                     .padding(8)
-                    .background(Color.black.opacity(0.2))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .background(.ultraThinMaterial)
+                    .clipShape(.rect(cornerRadius: 8))
                     .padding(.bottom, 2)
                 }
                 
@@ -301,7 +303,7 @@ struct GroupMessageBubble: View {
                         }
                     }
                     .frame(maxWidth: 220, maxHeight: 200)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .clipShape(.rect(cornerRadius: 16))
                     .contextMenu {
                         Button { store.replyingToMessage = message } label: {
                             Label(settings.t("رد"), systemImage: "arrowshape.turn.up.left")
@@ -325,8 +327,9 @@ struct GroupMessageBubble: View {
                     Text(message.text)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 10)
-                        .background(isMine ? Color.blue : Color.white.opacity(0.15))
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .background(isMine ? Color.blue.opacity(0.8) : Color.white.opacity(0.15))
+                        .background(isMine ? AnyShapeStyle(Color.blue.opacity(0.2)) : AnyShapeStyle(.ultraThinMaterial))
+                        .clipShape(.rect(cornerRadius: 16))
                         .foregroundStyle(.white)
                         .contextMenu {
                         Button {

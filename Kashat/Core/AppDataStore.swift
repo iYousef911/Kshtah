@@ -26,6 +26,7 @@ class AppDataStore: ObservableObject {
     @Published var userProfile: UserProfile?
     @Published var chats: [ChatThread] = [] // RESTORED
     @Published var activeThreadMessages: [ChatMessage] = [] // RESTORED
+    @Published var isBotTyping: Bool = false // NEW: Typing indicator for AI bot
     @Published var categories: [Category] = [] // NEW: Dynamic Categories
     @Published var recommendedSpots: [RecommendedSpot] = [] // NEW: Smart Recommendations
     
@@ -66,6 +67,12 @@ class AppDataStore: ObservableObject {
     @Published var chatRooms: [ChatRoom] = [] // NEW
     @Published var activeRoomMessages: [GroupMessage] = [] // NEW
     @Published var isBanned: Bool = false // NEW
+    
+    // Derived Unread Count
+    var totalUnreadMessages: Int {
+        chats.compactMap { $0.unreadCount }.reduce(0, +)
+    }
+    
     @Published var successfulActionsCount: Int = UserDefaults.standard.integer(forKey: "successfulActionsCount") {
         didSet { UserDefaults.standard.set(successfulActionsCount, forKey: "successfulActionsCount") }
     }
@@ -230,6 +237,11 @@ class AppDataStore: ObservableObject {
         firebase.getChatThreadId(otherUserId: otherUserId) { [weak self] (threadId: String) in
             guard let self = self else { return }
             
+            // Mark chat as read natively
+            if let currentUid = self.firebase.user?.uid {
+                self.firebase.markChatAsRead(threadId: threadId, uid: currentUid)
+            }
+            
             self.messageListener?.remove()
             
             // Fix Ambiguity: Explicit type for messages
@@ -267,25 +279,24 @@ class AppDataStore: ObservableObject {
                 self.activeThreadMessages.append(userMsg)
             }
             
-            // 2. Simulate Typing / Call AI
+            // 2. Show typing indicator
+            DispatchQueue.main.async { self.isBotTyping = true }
+            
+            // 3. Call AI
             Task {
-                // Delay slightly for realism
-                try? await Task.sleep(nanoseconds: 1 * 1_000_000_000)
-                
                 let responseText = await AIService.shared.askGuide(query: text, isPro: self.userProfile?.isPro ?? false)
                 
-                // 3. Add Bot Response
+                // 4. Add Bot Response + clear typing
                 let botMsg = ChatMessage(
-                    id: UUID(), // FIXED: Use UUID directly
+                    id: UUID(),
                     text: responseText,
                     senderId: "kashat_guide_bot",
                     timestamp: Date()
                 )
                 
                 await MainActor.run {
-                    withAnimation {
-                        self.activeThreadMessages.append(botMsg)
-                    }
+                    self.isBotTyping = false
+                    withAnimation { self.activeThreadMessages.append(botMsg) }
                 }
             }
             return
@@ -293,7 +304,7 @@ class AppDataStore: ObservableObject {
         
         // Fix Ambiguity: Explicit type for threadId
         firebase.getChatThreadId(otherUserId: otherUserId) { [weak self] (threadId: String) in
-            self?.firebase.sendMessage(threadId: threadId, text: text)
+            self?.firebase.sendMessage(threadId: threadId, text: text, otherUserId: otherUserId)
         }
     }
     

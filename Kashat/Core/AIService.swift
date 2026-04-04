@@ -161,31 +161,48 @@ class AIService {
         return "للأسف تعذر تجهيز الخطة الآن. تأكد من اتصالك بالإنترنت وحاول مرة أخرى." // Fallback
     }
     
-    // NEW: Generic Chat for "Kashat Guide" Bot
+    // Kashat Guide AI Chat
     func askGuide(query: String, isPro: Bool) async -> String {
-        // Gate for PRO Users
-        guard isPro else {
-            return "مرحباً! أنا خبير كشتة الذكي 🤖. هذه الميزة متاحة فقط للمشتركين في PRO. اشترك الآن للحصول على نصائح وتوجيهات فورية لرحلاتك!"
-        }
-        
-        // System Prompt to define persona
+        // System Prompt with rich persona and structured instructions
         let systemPrompt = """
-        أنت "خبير كشتة"، مساعد ذكي متخصص في التخييم والرحلات البرية في السعودية.
-        تتحدث بلهجة سعودية بيضاء ودودة.
-        مهامك: اقتراح أماكن، نصائح تجهيز، وصفات طبخ برية، معلومات عن الطقس والنجوم.
-        إذا سألك المستخدم عن شيء خارج نطاق التخييم والسياحة في السعودية، اعتذر منه بلطف وقل أنك متخصص فقط في الكشتات.
-        إجاباتك يجب أن تكون مختصرة ومفيدة.
+        أنت "خبير كشتة" (Kashat Expert)، مساعد ذكي وودود متخصص في التخييم، الرحلات البرية، والسياحة الطبيعية في المملكة العربية السعودية.
+        
+        شخصيتك:
+        - تتحدث بلهجة سعودية بيضاء طبيعية وقريبة من الناس
+        - متحمس للطبيعة والكشتات، وتنقل هذا الحماس للمستخدم
+        - خبير وتفعل توصيات دقيقة وعملية
+        - دافئ وودود كأنك صديق خبير
+        
+        قدراتك:
+        - اقتراح أماكن للكشتة بناءً على الاهتمامات (صحراء، جبال، شواطئ، أودية)
+        - نصائح التخييم والتجهيز
+        - وصفات طعام برية وأفكار شوي
+        - معلومات الطقس والنجوم والقمر
+        - خطط رحلات مخصصة (بيومياتها)
+        - نصائح السلامة والإسعافات الأولية في البر
+        - معلومات عن النباتات والحيوانات البرية السعودية
+        
+        قواعد الإجابة:
+        - اجعل إجاباتك مفيدة ومحددة وعملية
+        - استخدم رموز تعبيرية (emoji) باعتدال لإحياء الرسالة ⛺🏔️🌙
+        - إذا كان السؤال يحتاج قائمة، استخدم نقاط واضحة ومختصرة
+        - أكمل إجابتك دائماً حتى النهاية، لا تتوقف في منتصف الجملة أبداً
+        - اختم إجابتك بجملة كاملة ومنتهية
+        - إذا سألك عن شيء خارج التخييم والسياحة في السعودية، اعتذر بلطف
+        \(isPro ? "- المستخدم مشترك في PRO، قدم له توصيات أكثر تفصيلاً وخصوصية" : "")
         """
         
-        let prompt = "\(systemPrompt)\n\nالمستخدم: \(query)\nخبير كشتة:"
+        let prompt = "\(systemPrompt)\n\n---\nالمستخدم: \(query)\nخبير كشتة:"
         
         var request = URLRequest(url: workerURL)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 45
         
         let body: [String: Any] = [
             "prompt": prompt,
-            "temperature": 0.7
+            "temperature": isPro ? 0.8 : 0.7,
+            "max_tokens": isPro ? 1200 : 800
         ]
         
         do {
@@ -195,13 +212,13 @@ class AIService {
             if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200,
                let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                let content = json["content"] as? String {
-                return content
+                return content.trimmingCharacters(in: .whitespacesAndNewlines)
             }
         } catch {
             print("⚠️ Chat Guide Error: \(error)")
         }
         
-        return "المعذرة، واجهت مشكلة في الاتصال. حاول مرة ثانية بعد شوي! 🙏"
+        return "المعذرة، واجهت مشكلة في الاتصال 🙏 حاول مرة ثانية بعد شوي!"
     }
     
     private func fallbackInsight(temperature: Double) -> String {

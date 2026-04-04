@@ -195,8 +195,29 @@ struct GlassSpotCard: View {
         .glassEffect(GlassStyle.regular.interactive(), in: RoundedRectangle(cornerRadius: 24))
         // Add a gold border for locked/pro spots to make them pop even more
         .overlay(
-            RoundedRectangle(cornerRadius: 24)
-                .stroke(isLocked ? Color.yellow.opacity(0.5) : Color.clear, lineWidth: 1)
+            ZStack {
+                if spot.isSpecial {
+                    RoundedRectangle(cornerRadius: 24)
+                        .stroke(LinearGradient(colors: [.yellow, .orange], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 2)
+                    VStack {
+                        HStack {
+                            Spacer()
+                            Text("مميز")
+                                .font(.caption2.weight(.bold))
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(LinearGradient(colors: [.yellow, .orange], startPoint: .leading, endPoint: .trailing))
+                                .foregroundStyle(.black)
+                                .clipShape(Capsule())
+                                .padding([.top, .trailing], 12)
+                        }
+                        Spacer()
+                    }
+                } else {
+                    RoundedRectangle(cornerRadius: 24)
+                        .stroke(isLocked ? Color.yellow.opacity(0.5) : Color.clear, lineWidth: 1)
+                }
+            }
         )
     }
 }
@@ -230,7 +251,16 @@ struct LiquidGlassCard<Content: View>: View {
                 )
                 .onReceive(timer) { _ in time += 0.05 }
             } else {
-                LinearGradient(colors: [.orange, .red, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
+                if #available(iOS 17.0, *) {
+                    LinearGradient(colors: [.orange, .red, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        .phaseAnimator([false, true]) { view, phase in
+                            view.hueRotation(.degrees(phase ? 30 : -30))
+                        } animation: { _ in
+                            .easeInOut(duration: 4).repeatForever(autoreverses: true)
+                        }
+                } else {
+                    LinearGradient(colors: [.orange, .red, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
+                }
             }
             
             // 2. Ultra Thin Glass Layer

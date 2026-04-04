@@ -18,13 +18,14 @@ struct CampingSpot: Identifiable, Hashable {
     let numberOfRatings: Int // NEW: Rating Count
     let coordinate: CLLocationCoordinate2D
     let imageURL: String?
+    var isSpecial: Bool = false // NEW: Special prominent spot
     var isProOnly: Bool = false // NEW: Pro Exclusive Spot
     var aiInsight: String? // NEW: Advanced AI Insight for Pro users
     var bortleScale: Int? // NEW: Light pollution level (1-9)
     var addedBy: String? // NEW: Creator Name
     var contactInfo: String? // NEW: Creator Email or Phone
     
-    init(id: UUID = UUID(), name: String, location: String, type: String, rating: Double, numberOfRatings: Int = 0, coordinate: CLLocationCoordinate2D, imageURL: String? = nil, isProOnly: Bool = false, aiInsight: String? = nil, bortleScale: Int? = nil, addedBy: String? = nil, contactInfo: String? = nil) {
+    init(id: UUID = UUID(), name: String, location: String, type: String, rating: Double, numberOfRatings: Int = 0, coordinate: CLLocationCoordinate2D, imageURL: String? = nil, isSpecial: Bool = false, isProOnly: Bool = false, aiInsight: String? = nil, bortleScale: Int? = nil, addedBy: String? = nil, contactInfo: String? = nil) {
         self.id = id
         self.name = name
         self.location = location
@@ -33,6 +34,7 @@ struct CampingSpot: Identifiable, Hashable {
         self.numberOfRatings = numberOfRatings
         self.coordinate = coordinate
         self.imageURL = imageURL
+        self.isSpecial = isSpecial
         self.isProOnly = isProOnly
         self.aiInsight = aiInsight
         self.bortleScale = bortleScale
@@ -179,6 +181,7 @@ struct ChatThread: Identifiable, Hashable, Codable {
     var messages: [ChatMessage]
     var lastMessageText: String
     var lastMessageTime: Date
+    var unreadCount: Int? = 0
     
     var timeString: String {
         let formatter = DateFormatter()

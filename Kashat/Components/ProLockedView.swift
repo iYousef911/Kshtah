@@ -30,9 +30,20 @@ struct ProLockedView<Content: View>: View {
                     SubscriptionManager.shared.presentPaywall()
                 }) {
                     VStack(spacing: 8) {
-                        Image(systemName: "lock.fill")
-                            .font(.largeTitle)
-                            .foregroundStyle(.yellow)
+                        if #available(iOS 17.0, *) {
+                            Image(systemName: "lock.fill")
+                                .font(.largeTitle)
+                                .foregroundStyle(.yellow)
+                                .phaseAnimator([1.0, 1.2]) { content, phase in
+                                    content.scaleEffect(phase)
+                                } animation: { _ in
+                                    .easeInOut(duration: 1.5).repeatForever(autoreverses: true)
+                                }
+                        } else {
+                            Image(systemName: "lock.fill")
+                                .font(.largeTitle)
+                                .foregroundStyle(.yellow)
+                        }
                         
                         Text("Unlock with PRO")
                             .font(.headline)

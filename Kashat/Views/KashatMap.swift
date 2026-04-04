@@ -415,14 +415,16 @@ struct KashatMap: View {
                     }
                 } else {
                     Spacer()
-                    Button(action: { withAnimation { isAddMode = true } }) {
-                        Image(systemName: "plus")
-                            .font(.title)
-                            .fontWeight(.bold)
-                            .foregroundStyle(Color.white)
-                            .frame(width: 60, height: 60)
-                            .glassEffect(GlassStyle.regular.interactive(), in: Circle())
-                            .shadow(color: Color.black.opacity(0.3), radius: 10)
+                    if FirebaseManager.shared.user != nil {
+                        Button(action: { withAnimation { isAddMode = true } }) {
+                            Image(systemName: "plus")
+                                .font(.title)
+                                .fontWeight(.bold)
+                                .foregroundStyle(Color.white)
+                                .frame(width: 60, height: 60)
+                                .glassEffect(GlassStyle.regular.interactive(), in: Circle())
+                                .shadow(color: Color.black.opacity(0.3), radius: 10)
+                        }
                     }
                 }
             }

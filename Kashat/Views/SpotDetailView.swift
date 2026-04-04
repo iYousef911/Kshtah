@@ -458,20 +458,20 @@ struct SpotWeatherSummary: View {
     let rainChance: String
 
     var body: some View {
-        HStack(spacing: 20) {
-            WeatherColumn(icon: "sun.max.fill", value: temperature, label: "الحرارة")
-            Divider().background(.white.opacity(0.3))
-            
-            ProLockedView(feature: "weather_details") {
-                HStack(spacing: 20) {
-                    WeatherColumn(icon: "wind", value: windSpeed, label: "الرياح")
-                    Divider().background(.white.opacity(0.3))
-                    WeatherColumn(icon: "drop.fill", value: rainChance, label: "المطر")
+        LiquidGlassCard {
+            HStack(spacing: 20) {
+                WeatherColumn(icon: "sun.max.fill", value: temperature, label: "الحرارة")
+                Divider().background(.white.opacity(0.3))
+                
+                ProLockedView(feature: "weather_details") {
+                    HStack(spacing: 20) {
+                        WeatherColumn(icon: "wind", value: windSpeed, label: "الرياح")
+                        Divider().background(.white.opacity(0.3))
+                        WeatherColumn(icon: "drop.fill", value: rainChance, label: "المطر")
+                    }
                 }
             }
         }
-        .padding()
-        .glassEffect(.regular, in: .capsule)
         .padding(.horizontal)
     }
 }
@@ -582,33 +582,31 @@ struct SpotActionButtons: View {
     var onShowConvoy: () -> Void
 
     var body: some View {
-        HStack(spacing: 15) {
+        HStack(spacing: 8) {
             Button(action: onDirections) {
                 Label("اتجاهات", systemImage: "arrow.triangle.turn.up.right.circle.fill")
                     .font(.headline)
                     .padding()
                     .frame(maxWidth: .infinity)
-                    .background(Color.blue)
-                    .clipShape(.capsule)
-                    .foregroundStyle(.white)
             }
+            .foregroundStyle(.white)
+            
+            Divider().background(Color.white.opacity(0.3)).frame(height: 30)
             
             Button(action: onShare) {
                 Image(systemName: "square.and.arrow.up")
                     .padding()
-                    .background(.white.opacity(0.1))
-                    .clipShape(.circle)
-                    .foregroundStyle(.white)
             }
+            .foregroundStyle(.white)
             
             if store.userProfile?.isPro ?? false {
+                Divider().background(Color.white.opacity(0.3)).frame(height: 30)
+                
                 Button(action: onShowConvoy) {
                     Image(systemName: "car.2.fill")
                         .padding()
-                        .background(Color.blue)
-                        .clipShape(.circle)
-                        .foregroundStyle(.white)
                 }
+                .foregroundStyle(.white)
                 
                 Button(action: { offlineMaps.downloadMap(for: spot) }) {
                     ZStack {
@@ -620,14 +618,14 @@ struct SpotActionButtons: View {
                         } else {
                             Image(systemName: offlineMaps.isDownloaded(spot.id) ? "checkmark.circle.fill" : "map.fill")
                                 .padding()
-                                .background(offlineMaps.isDownloaded(spot.id) ? Color.green : Color.blue)
-                                .clipShape(.circle)
+                                .foregroundStyle(offlineMaps.isDownloaded(spot.id) ? Color.green : Color.white)
                         }
                     }
-                    .foregroundStyle(.white)
                 }
+                .foregroundStyle(.white)
             }
         }
+        .glassEffect(.regular.interactive(), in: Capsule())
         .padding(.horizontal)
     }
 }
@@ -650,64 +648,64 @@ struct SpotCommentsSection: View {
                 .foregroundStyle(.white)
                 .padding(.horizontal)
             
-            VStack(spacing: 10) {
-                HStack {
-                    Text("تقييمك:").font(.caption).foregroundStyle(.white.opacity(0.7))
-                    ForEach(1...5, id: \.self) { star in 
-                        Image(systemName: star <= newRating ? "star.fill" : "star")
-                            .foregroundStyle(.yellow)
-                            .onTapGesture { withAnimation { newRating = star } } 
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal, 12)
-                
-                if let imageData = selectedImageData, let uiImage = UIImage(data: imageData) {
-                    ZStack(alignment: .topTrailing) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 80, height: 80)
-                            .clipShape(.rect(cornerRadius: 12))
-                        Button(action: { selectedItem = nil; selectedImageData = nil }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.red)
-                                .background(Color.white.clipShape(.circle))
+            LiquidGlassCard {
+                VStack(spacing: 10) {
+                    HStack {
+                        Text("تقييمك:").font(.caption).foregroundStyle(.white.opacity(0.7))
+                        ForEach(1...5, id: \.self) { star in 
+                            Image(systemName: star <= newRating ? "star.fill" : "star")
+                                .foregroundStyle(.yellow)
+                                .onTapGesture { withAnimation { newRating = star } } 
                         }
-                        .offset(x: 5, y: -5)
+                        Spacer()
                     }
                     .padding(.horizontal, 12)
-                }
-                
-                HStack {
-                    PhotosPicker(selection: $selectedItem, matching: .images, photoLibrary: .shared()) {
-                        Image(systemName: "camera.fill")
-                            .foregroundStyle(.blue)
-                            .padding(10)
-                            .background(.white.opacity(0.1))
-                            .clipShape(.circle)
-                    }
-                    .onChange(of: selectedItem) { _, newValue in
-                        Task { if let data = try? await newValue?.loadTransferable(type: Data.self) { selectedImageData = data } }
+                    
+                    if let imageData = selectedImageData, let uiImage = UIImage(data: imageData) {
+                        ZStack(alignment: .topTrailing) {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 80, height: 80)
+                                .clipShape(.rect(cornerRadius: 12))
+                            Button(action: { selectedItem = nil; selectedImageData = nil }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(.red)
+                                    .background(Color.white.clipShape(.circle))
+                            }
+                            .offset(x: 5, y: -5)
+                        }
+                        .padding(.horizontal, 12)
                     }
                     
-                    TextField("اكتب تجربتك...", text: $newCommentText)
-                        .foregroundStyle(.white)
-                        .padding(10)
-                        .background(.white.opacity(0.1))
-                        .clipShape(.capsule)
-                    
-                    Button(action: onSubmit) { 
-                        Image(systemName: "paperplane.fill")
-                            .foregroundStyle(.blue)
+                    HStack {
+                        PhotosPicker(selection: $selectedItem, matching: .images, photoLibrary: .shared()) {
+                            Image(systemName: "camera.fill")
+                                .foregroundStyle(.blue)
+                                .padding(10)
+                                .background(.white.opacity(0.1))
+                                .clipShape(.circle)
+                        }
+                        .onChange(of: selectedItem) { _, newValue in
+                            Task { if let data = try? await newValue?.loadTransferable(type: Data.self) { selectedImageData = data } }
+                        }
+                        
+                        TextField("اكتب تجربتك...", text: $newCommentText)
+                            .foregroundStyle(.white)
                             .padding(10)
                             .background(.white.opacity(0.1))
-                            .clipShape(.circle) 
+                            .clipShape(.capsule)
+                        
+                        Button(action: onSubmit) { 
+                            Image(systemName: "paperplane.fill")
+                                .foregroundStyle(.blue)
+                                .padding(10)
+                                .background(.white.opacity(0.1))
+                                .clipShape(.circle) 
+                        }
                     }
                 }
             }
-            .padding()
-            .glassEffect(.regular, in: .rect(cornerRadius: 20))
             .padding(.horizontal)
             
             Group {
@@ -769,11 +767,11 @@ struct CommentRow: View {
                 Text(comment.text).font(.subheadline).foregroundStyle(Color.white.opacity(0.8)).fixedSize(horizontal: false, vertical: true)
                 if let imageURL = comment.imageURL, let url = URL(string: imageURL) {
                     AsyncImage(url: url) { image in image.resizable().scaledToFill() } placeholder: { Color.white.opacity(0.1) }
-                        .frame(maxWidth: .infinity).frame(height: 150).clipped().clipShape(RoundedRectangle(cornerRadius: 12)).padding(.top, 4)
+                        .frame(maxWidth: .infinity).frame(height: 150).clipped().clipShape(.rect(cornerRadius: 12)).padding(.top, 4)
                 }
             }
         }
-        .padding().glassEffect(GlassStyle.regular, in: RoundedRectangle(cornerRadius: 16)).padding(.horizontal)
+        .padding().glassEffect(GlassStyle.regular, in: .rect(cornerRadius: 16)).padding(.horizontal)
     }
 }
 

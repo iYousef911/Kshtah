@@ -179,6 +179,14 @@ struct HomeFeedContent: View {
         }
     }
     
+    var specialSpots: [CampingSpot] {
+        filteredSpots.filter { $0.isSpecial }
+    }
+    
+    var regularSpots: [CampingSpot] {
+        filteredSpots.filter { !$0.isSpecial }
+    }
+    
     // Helper to get icon (duplicated logic for simplicity in extraction or moved to shared)
     
     @Environment(\.horizontalSizeClass) var sizeClass
@@ -248,32 +256,28 @@ struct HomeFeedContent: View {
                             Spacer()
                             
                             // Action Buttons
-                            HStack(spacing: 12) {
+                            HStack(spacing: 4) {
                                 Button(action: { showCompass = true }) {
                                     Image(systemName: "safari.fill")
                                         .padding(12)
-                                        .glassEffect(GlassStyle.regular.interactive(), in: Circle())
                                         .foregroundStyle(Color.white)
                                 }
                                 
                                 Button(action: { showChatDashboard = true }) {
                                     Image(systemName: "bubble.left.and.bubble.right.fill")
                                         .padding(12)
-                                        .glassEffect(GlassStyle.regular.interactive(), in: Circle())
                                         .foregroundStyle(Color.white)
                                 }
                                 
                                 Button(action: { showInbox = true }) {
                                     Image(systemName: "envelope.badge.fill")
                                         .padding(12)
-                                        .glassEffect(GlassStyle.regular.interactive(), in: Circle())
                                         .foregroundStyle(Color.white)
                                 }
                                 
                                 Button(action: { showNotifications = true }) {
                                     Image(systemName: "bell.badge.fill")
                                         .padding(12)
-                                        .glassEffect(GlassStyle.regular.interactive(), in: Circle())
                                         .foregroundStyle(Color.white)
                                 }
                                 
@@ -281,11 +285,11 @@ struct HomeFeedContent: View {
                                     Button(action: { showConvoy = true }) {
                                         Image(systemName: "car.2.fill")
                                             .padding(12)
-                                            .glassEffect(GlassStyle.regular.interactive(), in: Circle())
                                             .foregroundStyle(Color.white)
                                     }
                                 }
                             }
+                            .glassEffect(GlassStyle.regular.interactive(), in: Capsule())
                         }
                         .padding(.horizontal)
                         .opacity(opacity) // Apply Fade
@@ -296,7 +300,7 @@ struct HomeFeedContent: View {
                     
                     
                     // Categories (Entrance Animation 1)
-                    ScrollView(.horizontal, showsIndicators: false) {
+                    ScrollView(.horizontal) {
                         HStack(spacing: 15) {
                             ForEach(Array(store.categories.enumerated()), id: \.element.id) { index, category in
                                 Button(action: {
@@ -318,6 +322,7 @@ struct HomeFeedContent: View {
                         }
                         .padding(.horizontal)
                     }
+                    .scrollIndicators(.hidden)
                     
                     // AI Itinerary Master (PRO ONLY)
                     if store.userProfile?.isPro ?? false {
@@ -406,15 +411,20 @@ struct HomeFeedContent: View {
                                         .strokeBorder(LinearGradient(colors: [.clear, .white.opacity(0.8), .clear], startPoint: .leading, endPoint: .trailing), lineWidth: 1)
                                         .mask(
                                             GeometryReader { geo in
-                                                Rectangle()
-                                                    .fill(LinearGradient(colors: [.clear, .white, .clear], startPoint: .leading, endPoint: .trailing))
-                                                    .frame(width: 50)
-                                                    .offset(x: -geo.size.width) // Start offset
-                                                    .onAppear {
-                                                        withAnimation(.linear(duration: 2).repeatForever(autoreverses: false)) {
-                                                            // Logic for shimmer handled by separate view usually, simplified here by static gradient for now or need separate ShimmerView
+                                                if #available(iOS 17.0, *) {
+                                                    Rectangle()
+                                                        .fill(LinearGradient(colors: [.clear, .white, .clear], startPoint: .leading, endPoint: .trailing))
+                                                        .frame(width: 50)
+                                                        .phaseAnimator([false, true]) { view, phase in
+                                                            view.offset(x: phase ? geo.size.width : -geo.size.width)
+                                                        } animation: { _ in
+                                                            .linear(duration: 2).repeatForever(autoreverses: false)
                                                         }
-                                                    }
+                                                } else {
+                                                    Rectangle()
+                                                        .fill(LinearGradient(colors: [.clear, .white, .clear], startPoint: .leading, endPoint: .trailing))
+                                                        .frame(width: 50)
+                                                }
                                             }
                                         )
                                 )
@@ -426,7 +436,7 @@ struct HomeFeedContent: View {
                                 .foregroundStyle(Color.white.opacity(0.7))
                                 .padding(.horizontal)
                             
-                            ScrollView(.horizontal, showsIndicators: false) {
+                            ScrollView(.horizontal) {
                                 HStack(spacing: 15) {
                                     ForEach(Array(store.recommendedSpots.enumerated()), id: \.element.id) { index, rec in
                                         RecommendationCard(recommendation: rec)
@@ -442,6 +452,7 @@ struct HomeFeedContent: View {
                                 .padding(.horizontal)
                                 .padding(.bottom, 20)
                             }
+                            .scrollIndicators(.hidden)
                         }
                     }
                     
@@ -452,7 +463,22 @@ struct HomeFeedContent: View {
                             .foregroundStyle(Color.white)
                             .padding(.horizontal)
                         
-                        ForEach(Array(filteredSpots.enumerated()), id: \.element.id) { index, spot in
+                        // First loop through special spots
+                        ForEach(Array(specialSpots.enumerated()), id: \.element.id) { index, spot in
+                            GlassSpotCard(spot: spot)
+                                .padding(.horizontal)
+                                .padding(.bottom, 10)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    selectedSpot = spot
+                                    let generator = UIImpactFeedbackGenerator(style: .light)
+                                    generator.impactOccurred()
+                                }
+                                .transition(.scale(scale: 0.9).combined(with: .opacity))
+                        }
+                        
+                        // Then loop through regular spots, keeping ad injection tracking
+                        ForEach(Array(regularSpots.enumerated()), id: \.element.id) { index, spot in
                             GlassSpotCard(spot: spot)
                                 .padding(.horizontal)
                                 .padding(.bottom, 10)
@@ -504,7 +530,7 @@ struct HomeFeedContent: View {
                             .padding(.horizontal)
                             .padding(.top, 10)
                         
-                        ScrollView(.horizontal, showsIndicators: false) {
+                        ScrollView(.horizontal) {
                             HStack(spacing: 15) {
                                 ForEach(store.gear.prefix(5)) { item in
                                     NavigationLink(destination: ProductDetailView(item: item)) {
@@ -515,6 +541,7 @@ struct HomeFeedContent: View {
                             }
                             .padding(.horizontal)
                         }
+                        .scrollIndicators(.hidden)
                     }
                 }
                 .padding(.top)

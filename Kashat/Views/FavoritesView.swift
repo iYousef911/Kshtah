@@ -34,7 +34,7 @@ struct FavoritesView: View {
                     }
                     .padding(4)
                     .background(Color.white.opacity(0.1))
-                    .clipShape(Capsule())
+                    .clipShape(.capsule)
                     .padding(.horizontal)
                     .padding(.top, 20)
                     
@@ -43,26 +43,32 @@ struct FavoritesView: View {
                             // Spots List
                             if savedSpots.isEmpty {
                                 EmptyStateView(message: "ما حفظت أماكن لسا!")
+                                    .padding(.horizontal)
                             } else {
-                                VStack(spacing: 15) {
-                                    ForEach(savedSpots) { spot in
-                                        // Use existing GlassSpotCard
-                                        GlassSpotCard(spot: spot)
+                                GlassEffectContainer {
+                                    VStack(spacing: 15) {
+                                        ForEach(savedSpots) { spot in
+                                            // Use existing GlassSpotCard
+                                            GlassSpotCard(spot: spot)
+                                        }
                                     }
+                                    .padding()
                                 }
-                                .padding()
                             }
                         } else {
                             // Gear Grid
                             if savedGear.isEmpty {
                                 EmptyStateView(message: "ما حفظت معدات لسا!")
+                                    .padding(.horizontal)
                             } else {
-                                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 15) {
-                                    ForEach(savedGear) { item in
-                                        GearCard(item: item)
+                                GlassEffectContainer {
+                                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 15) {
+                                        ForEach(savedGear) { item in
+                                            GearCard(item: item)
+                                        }
                                     }
+                                    .padding()
                                 }
-                                .padding()
                             }
                         }
                     }
@@ -82,15 +88,19 @@ struct FavoritesView: View {
 struct EmptyStateView: View {
     let message: String
     var body: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "heart.slash")
-                .font(.system(size: 60))
-                .foregroundStyle(Color.white.opacity(0.3))
-            Text(message)
-                .font(.headline)
-                .foregroundStyle(Color.white.opacity(0.5))
+        LiquidGlassCard {
+            VStack(spacing: 15) {
+                Image(systemName: "heart.slash")
+                    .font(.system(size: 60))
+                    .foregroundStyle(Color.white)
+                    .shadow(radius: 5)
+                Text(message)
+                    .font(.headline)
+                    .foregroundStyle(Color.white)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity, minHeight: 250)
         }
-        .frame(height: 400)
     }
 }
 

@@ -19,6 +19,7 @@ struct ProfileView: View {
     
     // App Lock State
     @AppStorage("isAppLockEnabled") private var isAppLockEnabled = false
+    @AppStorage("isGuest") private var isGuest = false
     
     // Sheet States
     @State private var showMyBookings = false
@@ -32,7 +33,10 @@ struct ProfileView: View {
     @State private var showDeleteAccountAlert = false // NEW: Delete Account Alert
     
     // Live Data Accessors
-    var userName: String { store.userProfile?.name ?? "جاري التحميل..." }
+    var userName: String {
+        if FirebaseManager.shared.user == nil { return settings.t("زائر") }
+        return store.userProfile?.name ?? settings.t("جاري التحميل...")
+    }
     var balance: Double { store.userProfile?.balance ?? 0.0 }
     
     var body: some View {
@@ -108,19 +112,21 @@ struct ProfileView: View {
                 }
                 
                 // Edit Button Overlay
-                VStack {
-                    Spacer()
-                    HStack {
+                if FirebaseManager.shared.user != nil {
+                    VStack {
                         Spacer()
-                        Button(action: { showEditProfile = true }) {
-                            Image(systemName: "pencil.circle.fill")
-                                .symbolRenderingMode(.multicolor)
-                                .font(.title)
-                                .background(Circle().fill(Color.white))
+                        HStack {
+                            Spacer()
+                            Button(action: { showEditProfile = true }) {
+                                Image(systemName: "pencil.circle.fill")
+                                    .symbolRenderingMode(.multicolor)
+                                    .font(.title)
+                                    .background(Circle().fill(Color.white))
+                            }
                         }
                     }
+                    .frame(width: 100, height: 100)
                 }
-                .frame(width: 100, height: 100)
             }
             .overlay(
                 // Pro Glow
@@ -161,12 +167,14 @@ struct ProfileView: View {
             }
             
             // NEW: Stats View with Real Data
-            ProfileStatsView(
-                favoritesCount: store.favoriteSpotIds.count,
-                tripsCount: store.bookings.count,
-                balance: balance
-            )
-            .padding(.horizontal)
+            if FirebaseManager.shared.user != nil {
+                ProfileStatsView(
+                    favoritesCount: store.favoriteSpotIds.count,
+                    tripsCount: store.bookings.count,
+                    balance: balance
+                )
+                .padding(.horizontal)
+            }
             
             // NEW: Pro Status / Upgrade Card
             if !SubscriptionManager.shared.isPro && store.userProfile?.isPro != true {
@@ -212,17 +220,19 @@ struct ProfileView: View {
     
     private var settingsListSection: some View {
         VStack(spacing: 4) {
-            Button(action: { showMyBookings = true }) {
-                SettingsRow(icon: "cube.box.fill", title: settings.t("طلباتي"), subtitle: "")
+            if FirebaseManager.shared.user != nil {
+                Button(action: { showMyBookings = true }) {
+                    SettingsRow(icon: "cube.box.fill", title: settings.t("طلباتي"), subtitle: "")
+                }
+                .buttonStyle(.plain)
+                
+                Button(action: { showFavorites = true }) {
+                    SettingsRow(icon: "heart.fill", title: settings.t("المفضلة"), subtitle: "")
+                }
+                .buttonStyle(.plain)
+                
+                Divider().background(Color.white.opacity(0.1)).padding(.horizontal)
             }
-            .buttonStyle(.plain)
-            
-            Button(action: { showFavorites = true }) {
-                SettingsRow(icon: "heart.fill", title: settings.t("المفضلة"), subtitle: "")
-            }
-            .buttonStyle(.plain)
-            
-            Divider().background(Color.white.opacity(0.1)).padding(.horizontal)
             
             Button(action: { settings.toggleLanguage() }) {
                 SettingsRow(icon: "globe", title: settings.t("اللغة"), subtitle: settings.language == "ar" ? "العربية" : "English", hasChevron: false)
@@ -297,12 +307,7 @@ struct ProfileView: View {
                 StatItem(title: "الرحلات", value: "\(tripsCount)", icon: "tent.fill")
             }
             .padding()
-            .background(Color.white.opacity(0.05))
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
-            )
+            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16))
         }
     }
     
@@ -332,30 +337,44 @@ struct ProfileView: View {
     
     private var authButtonsSection: some View {
         VStack(spacing: 12) {
-            Button(action: { showDeleteAccountAlert = true }) {
-                Text(settings.t("حذف الحساب"))
-                    .fontWeight(.medium)
-                    .foregroundStyle(Color.white.opacity(0.8))
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .glassEffect(GlassStyle.regular.interactive(), in: Capsule())
-            }
-            .alert(settings.t("حذفه نهائياً؟"), isPresented: $showDeleteAccountAlert) {
-                Button(settings.t("إلغاء"), role: .cancel) { }
-                Button(settings.t("حذف"), role: .destructive) { deleteAccount() }
-            } message: {
-                Text(settings.t("سيتم حذف جميع بياناتك ولا يمكن التراجع."))
-            }
-            
-            Button(action: {
-                try? FirebaseManager.shared.auth.signOut()
-            }) {
-                Text(settings.t("تسجيل خروج"))
-                    .fontWeight(.medium)
-                    .foregroundStyle(Color.red)
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .glassEffect(GlassStyle.regular.interactive(), in: Capsule())
+            if FirebaseManager.shared.user == nil {
+                Button(action: {
+                    isGuest = false
+                }) {
+                    Text(settings.t("تسجيل الدخول / إنشاء حساب"))
+                        .fontWeight(.bold)
+                        .foregroundStyle(Color.blue)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.white)
+                        .clipShape(Capsule())
+                }
+            } else {
+                Button(action: { showDeleteAccountAlert = true }) {
+                    Text(settings.t("حذف الحساب"))
+                        .fontWeight(.medium)
+                        .foregroundStyle(Color.white.opacity(0.8))
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .glassEffect(GlassStyle.regular.interactive(), in: Capsule())
+                }
+                .alert(settings.t("حذفه نهائياً؟"), isPresented: $showDeleteAccountAlert) {
+                    Button(settings.t("إلغاء"), role: .cancel) { }
+                    Button(settings.t("حذف"), role: .destructive) { deleteAccount() }
+                } message: {
+                    Text(settings.t("سيتم حذف جميع بياناتك ولا يمكن التراجع."))
+                }
+                
+                Button(action: {
+                    try? FirebaseManager.shared.auth.signOut()
+                }) {
+                    Text(settings.t("تسجيل خروج"))
+                        .fontWeight(.medium)
+                        .foregroundStyle(Color.red)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .glassEffect(GlassStyle.regular.interactive(), in: Capsule())
+                }
             }
         }
         .padding(.horizontal)
