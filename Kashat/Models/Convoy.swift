@@ -46,8 +46,8 @@ struct ConvoyMember: Identifiable, Codable {
               let name = dictionary["name"] as? String else { return nil }
         self.id = id
         self.name = name
-        if let lat = dictionary["latitude"] as? Double,
-           let lon = dictionary["longitude"] as? Double {
+        if let lat = (dictionary["latitude"] as? NSNumber)?.doubleValue,
+           let lon = (dictionary["longitude"] as? NSNumber)?.doubleValue {
             self.lastLocation = CLLocationCoordinate2D(latitude: lat, longitude: lon)
         }
         self.lastActive = (dictionary["lastActive"] as? Timestamp)?.dateValue() ?? Date()
@@ -117,8 +117,8 @@ struct ConvoyPing: Identifiable, Codable {
               let memberName = dictionary["memberName"] as? String,
               let typeString = dictionary["type"] as? String,
               let type = PingType(rawValue: typeString),
-              let lat = dictionary["latitude"] as? Double,
-              let lon = dictionary["longitude"] as? Double else { return nil }
+              let lat = (dictionary["latitude"] as? NSNumber)?.doubleValue,
+              let lon = (dictionary["longitude"] as? NSNumber)?.doubleValue else { return nil }
         
         self.id = id
         self.memberId = memberId

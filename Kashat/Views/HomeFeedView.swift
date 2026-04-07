@@ -18,6 +18,7 @@ struct HomeFeedView: View {
     @State private var showConvoy = false // NEW: For Pro Convoy
     @State private var showChatDashboard = false // NEW: Group Chat
     @State private var showAIItinerary = false // NEW: AI Itinerary
+    @State private var showChecklists = false // NEW: Trip Checklists
     @State private var weatherAlert: (type: String, speed: Int)? // NEW: Alert State
     @State private var selectedCategory = "الكل"
 
@@ -56,6 +57,7 @@ struct HomeFeedView: View {
                         showConvoy: $showConvoy,
                         showChatDashboard: $showChatDashboard,
                         showAIItinerary: $showAIItinerary,
+                        showChecklists: $showChecklists,
                         weatherAlert: $weatherAlert
                     )
                     .sheet(item: $selectedSpot) { spot in // Sheet only on iPhone
@@ -68,6 +70,9 @@ struct HomeFeedView: View {
                     }
                     .sheet(isPresented: $showChatDashboard) {
                         GroupChatDashboard()
+                    }
+                    .sheet(isPresented: $showChecklists) {
+                        ChecklistsDashboardView()
                     }
                 }
             } else {
@@ -83,6 +88,7 @@ struct HomeFeedView: View {
                         showConvoy: $showConvoy,
                         showChatDashboard: $showChatDashboard,
                         showAIItinerary: $showAIItinerary,
+                        showChecklists: $showChecklists,
                         weatherAlert: $weatherAlert
                     )
                     .navigationTitle("Home")
@@ -92,6 +98,9 @@ struct HomeFeedView: View {
                     }
                     .sheet(isPresented: $showChatDashboard) {
                         GroupChatDashboard()
+                    }
+                    .sheet(isPresented: $showChecklists) {
+                        ChecklistsDashboardView()
                     }
                 } detail: {
                     ZStack {
@@ -160,6 +169,7 @@ struct HomeFeedContent: View {
     @Binding var showConvoy: Bool
     @Binding var showChatDashboard: Bool // NEW: Binding
     @Binding var showAIItinerary: Bool
+    @Binding var showChecklists: Bool
     @Binding var weatherAlert: (type: String, speed: Int)?
     @StateObject private var nativeAdViewModel = NativeAdViewModel()
     
@@ -263,6 +273,12 @@ struct HomeFeedContent: View {
                                         .foregroundStyle(Color.white)
                                 }
                                 
+                                Button(action: { showChecklists = true }) {
+                                    Image(systemName: "checklist")
+                                        .padding(12)
+                                        .foregroundStyle(Color.white)
+                                }
+                                
                                 Button(action: { showChatDashboard = true }) {
                                     Image(systemName: "bubble.left.and.bubble.right.fill")
                                         .padding(12)
@@ -281,12 +297,10 @@ struct HomeFeedContent: View {
                                         .foregroundStyle(Color.white)
                                 }
                                 
-                                if store.userProfile?.isPro ?? false {
-                                    Button(action: { showConvoy = true }) {
-                                        Image(systemName: "car.2.fill")
-                                            .padding(12)
-                                            .foregroundStyle(Color.white)
-                                    }
+                                Button(action: { showConvoy = true }) {
+                                    Image(systemName: "car.2.fill")
+                                        .padding(12)
+                                        .foregroundStyle(Color.white)
                                 }
                             }
                             .glassEffect(GlassStyle.regular.interactive(), in: Capsule())

@@ -428,6 +428,45 @@ class FirebaseManager: ObservableObject {
         }
     }
     
+    // MARK: - Global Moments (Social Feed)
+    func fetchGlobalMoments(completion: @escaping ([SpotMoment]) -> Void) {
+        db.collection("kashta_moments").order(by: "timestamp", descending: true).getDocuments { snapshot, error in
+            guard let docs = snapshot?.documents else { completion([]); return }
+            
+            let fetched = docs.compactMap { doc -> SpotMoment? in
+                let data = doc.data()
+                guard let userId = data["userId"] as? String,
+                      let userName = data["userName"] as? String,
+                      let imageURL = data["imageURL"] as? String,
+                      let timestamp = (data["timestamp"] as? Timestamp)?.dateValue() else { return nil }
+                
+                return SpotMoment(
+                    id: UUID(uuidString: doc.documentID) ?? UUID(),
+                    userId: userId,
+                    userName: userName,
+                    imageURL: imageURL,
+                    timestamp: timestamp,
+                    caption: data["caption"] as? String
+                )
+            }
+            completion(fetched)
+        }
+    }
+    
+    func addGlobalMoment(moment: SpotMoment) {
+        var data: [String: Any] = [
+            "id": moment.id.uuidString,
+            "userId": moment.userId,
+            "userName": moment.userName,
+            "imageURL": moment.imageURL,
+            "timestamp": Timestamp(date: moment.timestamp)
+        ]
+        if let caption = moment.caption {
+            data["caption"] = caption
+        }
+        db.collection("kashta_moments").document(moment.id.uuidString).setData(data)
+    }
+    
     // MARK: - Chat
     func getChatThreadId(otherUserId: String, completion: @escaping (String) -> Void) {
         guard let currentUid = user?.uid else { return }

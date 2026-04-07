@@ -174,6 +174,11 @@ struct ProfileView: View {
                     balance: balance
                 )
                 .padding(.horizontal)
+                
+                // NEW: Gamification Passport
+                GamificationPassportSection()
+                    .environmentObject(store)
+                    .environmentObject(settings)
             }
             
             // NEW: Pro Status / Upgrade Card

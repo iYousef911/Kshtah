@@ -170,13 +170,19 @@ struct ConvoyDashboard: View {
                                 .font(.largeTitle)
                                 .foregroundStyle(.white)
                         }
-                        .onLongPressGesture(minimumDuration: 0.2, pressing: { isPressing in
-                            if isPressing {
-                                startRecording()
-                            } else {
-                                stopRecordingAndSend()
-                            }
-                        }) {}
+                        .simultaneousGesture(
+                            DragGesture(minimumDistance: 0)
+                                .onChanged { _ in
+                                    if !voiceManager.isRecording {
+                                        startRecording()
+                                    }
+                                }
+                                .onEnded { _ in
+                                    if voiceManager.isRecording {
+                                        stopRecordingAndSend()
+                                    }
+                                }
+                        )
                     }
                     
                     Spacer()
@@ -213,6 +219,7 @@ struct ConvoyDashboard: View {
                 latitude: location.coordinate.latitude,
                 longitude: location.coordinate.longitude,
                 userId: user.id,
+                userName: user.name,
                 convoyId: convoyId
             )
         }

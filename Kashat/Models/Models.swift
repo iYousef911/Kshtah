@@ -90,6 +90,7 @@ struct UserProfile: Identifiable, Codable, Equatable {
     var profileImageURL: String?
     var isAdmin: Bool = false // NEW: Admin Flag
     var isPro: Bool = false // NEW: Pro Subscription Flag
+    var unlockedBadges: [String] = [] // NEW: Gamification Tracking
 }
 
 enum BookingStatus: String, Codable {
@@ -216,4 +217,46 @@ struct MockData {
         GearItem(name: "إضاءة ليد 500 واط", pricePerDay: 20, imageName: "lightbulb.fill", category: "كهرباء", ownerName: "كهربائي البر", rating: 4.6),
         GearItem(name: "حبل سحب 4x4", pricePerDay: 40, imageName: "car.circle.fill", category: "انقاذ", ownerName: "فريق غوث", rating: 5.0)
     ]
+}
+// MARK: - Checklists & Trip Planning Additions
+struct ChecklistItem: Identifiable, Codable, Hashable {
+    let id: UUID
+    var title: String
+    var isCompleted: Bool
+    
+    init(id: UUID = UUID(), title: String, isCompleted: Bool = false) {
+        self.id = id
+        self.title = title
+        self.isCompleted = isCompleted
+    }
+}
+
+struct TripChecklist: Identifiable, Codable, Hashable {
+    let id: UUID
+    var name: String
+    var items: [ChecklistItem]
+    var emoji: String
+    
+    init(id: UUID = UUID(), name: String, items: [ChecklistItem], emoji: String = "🎒") {
+        self.id = id
+        self.name = name
+        self.items = items
+        self.emoji = emoji
+    }
+    
+    var progress: Double {
+        if items.isEmpty { return 0 }
+        let completed = items.filter { $0.isCompleted }.count
+        return Double(completed) / Double(items.count)
+    }
+}
+
+// MARK: - Gamification (Passport Badges)
+struct GamificationBadge: Identifiable, Codable, Hashable {
+    let id: String
+    let name: String
+    let description: String
+    let icon: String // SF Symbol or image base name
+    var isUnlocked: Bool = false
+    var unlockedDate: Date? = nil
 }

@@ -126,5 +126,24 @@ service cloud.firestore {
       allow write: if isAuthenticated() && !isBanned() &&
                      request.resource.data.userId == request.auth.uid;
     }
+    // Convoys collection
+    match /convoys/{convoyId} {
+      allow read, write: if isAuthenticated() && !isBanned();
+      
+      match /members/{memberId} {
+        allow read, write: if isAuthenticated() && !isBanned();
+      }
+      
+      match /pings/{pingId} {
+        allow read, write: if isAuthenticated() && !isBanned();
+      }
+    }
+    
+    // Kashta Moments collection
+    match /kashta_moments/{momentId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && !isBanned() &&
+                     request.resource.data.userId == request.auth.uid;
+    }
   }
 }

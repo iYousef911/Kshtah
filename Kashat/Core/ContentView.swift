@@ -27,12 +27,13 @@ struct ContentView: View {
                     
                     TabView(selection: $selectedTab) {
                         HomeFeedView().tabItem { Label(settings.t("الرئيسية"), systemImage: "house.fill") }.tag(0)
+                        KashtaMomentsFeedView().tabItem { Label(settings.t("يوميات"), systemImage: "play.square.stack.fill") }.tag(1) // NEW SOCIAL TAB
                         MessagesView()
                             .tabItem { Label(settings.t("الرسائل"), systemImage: "bubble.left.and.bubble.right.fill") }
-                            .tag(1)
+                            .tag(2)
                             .badge(store.totalUnreadMessages)
-                        KashatMap().tabItem { Label(settings.t("الخريطة"), systemImage: "map.fill") }.tag(2)
-                        ProfileView().tabItem { Label(settings.t("حسابي"), systemImage: "person.fill") }.tag(3)
+                        KashatMap().tabItem { Label(settings.t("الخريطة"), systemImage: "map.fill") }.tag(3)
+                        ProfileView().tabItem { Label(settings.t("حسابي"), systemImage: "person.fill") }.tag(4)
                     }
                     .toolbarBackground(.visible, for: .tabBar)
                     .toolbarBackground(.ultraThinMaterial, for: .tabBar)

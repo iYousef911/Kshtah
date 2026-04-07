@@ -8,14 +8,21 @@
 import SwiftUI
 import FirebaseCore
 import FirebaseAuth
-import FirebaseMessaging // NEW IMPORT
+import FirebaseMessaging
 import OneSignalFramework
 import SuperwallKit
-import GoogleMobileAds // NEW IMPORT
+import GoogleMobileAds
+import FirebaseAppCheck // NEW IMPORT
 
 class AppDelegate: NSObject, UIApplicationDelegate, MessagingDelegate { // NEW Protocol
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        
+        #if targetEnvironment(simulator)
+        let providerFactory = AppCheckDebugProviderFactory()
+        AppCheck.setAppCheckProviderFactory(providerFactory)
+        #endif
+        
         FirebaseApp.configure()
         
         // NEW: Request Notification Permissions

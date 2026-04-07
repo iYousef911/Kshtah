@@ -48,9 +48,20 @@ struct SpotDetailView: View {
     @State private var selectedItem: PhotosPickerItem?
     @State private var selectedImageData: Data?
     
+    // NEW: Computed property to easily get weather condition for particles
+    var currentWeatherCondition: WeatherCondition {
+        let rain = Int(rainChance.replacingOccurrences(of: "%", with: "")) ?? 0
+        if rain > 50 { return .rain }
+        if Int(windSpeed.replacingOccurrences(of: " كم/س", with: "")) ?? 0 > 30 { return .dust }
+        if Double(temperature.replacingOccurrences(of: "°C", with: "")) ?? 25 < 5 { return .snow }
+        return .clear
+    }
+    
     var body: some View {
         ZStack {
-            LiquidBackgroundView()
+            // PHASE 1 & 4: Immersive Background
+            TimeOfDayBackground(hour: Calendar.current.component(.hour, from: Date()))
+            WeatherParticleOverlay(condition: currentWeatherCondition)
             
             ScrollView {
                 scrollContent
@@ -143,6 +154,7 @@ struct SpotDetailView: View {
                     isPro: store.userProfile?.isPro ?? false
                 )
                 .padding(.horizontal)
+                .aiGlow() // PHASE 2: Apple Intelligence Glow
             }
             
             ProLockedView(feature: "stargazing") {
@@ -279,7 +291,12 @@ struct SpotDetailView: View {
             store.successfulActionsCount += 1
             
             if newRating >= 4 || store.successfulActionsCount >= 5 {
-                if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene { SKStoreReviewController.requestReview(in: scene) }
+                Task { @MainActor in
+                    if let scene = await UIApplication.shared.connectedScenes
+                        .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
+                        AppStore.requestReview(in: scene)
+                    }
+                }
             }
             newCommentText = ""
             newRating = 5
@@ -378,6 +395,15 @@ struct SpotDetailHeader: View {
                             .resizable()
                             .scaledToFill()
                             .frame(width: geometry.size.width, height: geometry.size.height)
+                            .visualEffect { content, proxy in
+                                let minY = proxy.frame(in: .global).minY
+                                let scale = minY > 0 ? 1 + (minY / 500) : 1.0
+                                let blurRadius = minY < 0 ? min(-minY / 15, 10) : 0.0
+                                return content
+                                    .scaleEffect(scale)
+                                    .offset(y: minY > 0 ? -minY : 0)
+                                    .blur(radius: blurRadius)
+                            }
                             .clipped()
                     } placeholder: {
                         Rectangle()
@@ -599,14 +625,16 @@ struct SpotActionButtons: View {
             }
             .foregroundStyle(.white)
             
+            Divider().background(Color.white.opacity(0.3)).frame(height: 30)
+            
+            Button(action: onShowConvoy) {
+                Image(systemName: "car.2.fill")
+                    .padding()
+            }
+            .foregroundStyle(.white)
+            
             if store.userProfile?.isPro ?? false {
                 Divider().background(Color.white.opacity(0.3)).frame(height: 30)
-                
-                Button(action: onShowConvoy) {
-                    Image(systemName: "car.2.fill")
-                        .padding()
-                }
-                .foregroundStyle(.white)
                 
                 Button(action: { offlineMaps.downloadMap(for: spot) }) {
                     ZStack {

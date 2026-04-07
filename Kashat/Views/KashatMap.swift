@@ -349,12 +349,23 @@ struct KashatMap: View {
             Spacer()
             VStack(spacing: 12) {
                 Button(action: {
-                    withAnimation {
+                    withAnimation(.easeInOut(duration: 1.5)) {
                         is3DMode.toggle()
-                        position = .region(MKCoordinateRegion(
-                            center: currentCenter,
-                            span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-                        ))
+                        if is3DMode {
+                            position = .camera(MapCamera(
+                                centerCoordinate: currentCenter,
+                                distance: 2000,
+                                heading: 0,
+                                pitch: 60
+                            ))
+                        } else {
+                            position = .camera(MapCamera(
+                                centerCoordinate: currentCenter,
+                                distance: 10000,
+                                heading: 0,
+                                pitch: 0
+                            ))
+                        }
                     }
                 }) {
                     Image(systemName: is3DMode ? "view.2d" : "view.3d")
@@ -514,16 +525,14 @@ struct KashatMap: View {
     // MARK: - Helper Functions
     
     func centerOnUserLocation() {
-        withAnimation {
-            position = .userLocation(
-                fallback: .region(
-                    MKCoordinateRegion(
-                        center: CLLocationCoordinate2D(latitude: 24.7136, longitude: 46.6753),
-                        span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
-                    )
-                )
-            )
-            is3DMode = false
+        withAnimation(.easeInOut(duration: 1.5)) {
+            let userLoc = CLLocationCoordinate2D(latitude: 24.7136, longitude: 46.6753) // Default/Fallback
+            position = .camera(MapCamera(
+                centerCoordinate: userLoc,
+                distance: is3DMode ? 2000 : 10000,
+                heading: 0,
+                pitch: is3DMode ? 60 : 0
+            ))
         }
     }
     
@@ -588,43 +597,86 @@ struct KashatMap: View {
     }
 }
 
-// MARK: - Spot Marker View
+// MARK: - Spot Marker View (Premium Glass Orb Edition)
 
 struct SpotMarkerView: View {
     let spot: CampingSpot
     let isSelected: Bool
     let isLoaded: Bool
     @EnvironmentObject var store: AppDataStore
+    @State private var pulseRing = false
     
     var isLocked: Bool {
         spot.isProOnly && !(store.userProfile?.isPro ?? false)
     }
     
+    var markerColor: Color { isLocked ? .yellow : colorForCategory(spot.type) }
+    
     var body: some View {
-        VStack(spacing: 0) {
-            Image(systemName: isLocked ? "lock.fill" : iconForCategory(spot.type))
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(.white)
-                .padding(10)
-                .background(
-                    Circle()
-                        .fill(isLocked ? Color.yellow.gradient : colorForCategory(spot.type).gradient)
-                        .shadow(color: (isLocked ? Color.yellow : colorForCategory(spot.type)).opacity(0.5), radius: isSelected ? 8 : 4)
-                )
-                .overlay(
-                    Circle()
-                        .stroke(.white, lineWidth: 2)
-                )
-                .animation(.easeOut(duration: 0.4), value: isLoaded)
-                .overlay(alignment: .topTrailing) {
-                    if OfflineMapManager.shared.isDownloaded(spot.id) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 8))
-                            .foregroundStyle(.green)
-                            .background(Circle().fill(.white))
-                            .offset(x: 4, y: -4)
-                    }
+        ZStack {
+            // Selected Pulse Ring
+            if isSelected {
+                Circle()
+                    .stroke(markerColor.opacity(0.35), lineWidth: 2)
+                    .frame(width: pulseRing ? 60 : 44, height: pulseRing ? 60 : 44)
+                    .opacity(pulseRing ? 0 : 1)
+                    .animation(.easeOut(duration: 1.2).repeatForever(autoreverses: false), value: pulseRing)
+                    .onAppear { pulseRing = true }
+            }
+            
+            // Glass Orb Base
+            ZStack {
+                // Bottom glow shadow
+                Circle()
+                    .fill(markerColor.opacity(0.4))
+                    .frame(width: 40, height: 40)
+                    .blur(radius: isSelected ? 8 : 4)
+                
+                // Glass body
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [markerColor.opacity(0.9), markerColor.opacity(0.6)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 36, height: 36)
+                
+                // Top specular highlight (glassy sheen)
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [.white.opacity(0.55), .clear],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .frame(width: 28, height: 14)
+                    .offset(y: -6)
+                
+                // Icon
+                Image(systemName: isLocked ? "lock.fill" : iconForCategory(spot.type))
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.white)
+                    .shadow(radius: 2)
+            }
+            .frame(width: 36, height: 36)
+            .overlay(
+                Circle().stroke(.white.opacity(0.4), lineWidth: 1.5)
+            )
+            .scaleEffect(isLoaded ? (isSelected ? 1.15 : 1.0) : 0.4)
+            .animation(.spring(response: 0.45, dampingFraction: 0.55), value: isLoaded)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
+            .overlay(alignment: .topTrailing) {
+                if OfflineMapManager.shared.isDownloaded(spot.id) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.green)
+                        .background(Circle().fill(.white).padding(-1))
+                        .offset(x: 3, y: -3)
                 }
+            }
         }
     }
     

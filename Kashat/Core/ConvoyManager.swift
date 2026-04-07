@@ -10,6 +10,7 @@ class ConvoyManager: ObservableObject {
     private let db = Firestore.firestore()
     private var convoyListener: ListenerRegistration?
     private var pingListener: ListenerRegistration?
+    private var lastLocationUpdate: Date?
     
     func joinConvoy(id: String, userId: String, userName: String) {
         // 1. Ensure user is registered as a member in this convoy
@@ -59,8 +60,16 @@ class ConvoyManager: ObservableObject {
         }
     }
     
-    func updateLocation(latitude: Double, longitude: Double, userId: String, convoyId: String) {
+    func updateLocation(latitude: Double, longitude: Double, userId: String, userName: String, convoyId: String) {
+        // Throttle updates to Max 1 every 5 seconds to prevent Firestore write limit errors in production
+        if let last = lastLocationUpdate, Date().timeIntervalSince(last) < 5.0 {
+            return
+        }
+        lastLocationUpdate = Date()
+        
         let data: [String: Any] = [
+            "id": userId,
+            "name": userName,
             "latitude": latitude,
             "longitude": longitude,
             "lastActive": FieldValue.serverTimestamp()
@@ -147,5 +156,6 @@ class ConvoyManager: ObservableObject {
         activeConvoy = nil
         members = []
         pings = []
+        lastLocationUpdate = nil
     }
 }

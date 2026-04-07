@@ -18,7 +18,14 @@ class AppDataStore: ObservableObject {
     @Published var gear: [GearItem] = []
     @Published var bookings: [Booking] = []
     @Published var comments: [UUID: [Comment]] = [:]
-    @Published var moments: [UUID: [SpotMoment]] = [:] // NEW: Live Moments
+    @Published var moments: [UUID: [SpotMoment]] = [:] // Local spot moments
+    @Published var globalMoments: [SpotMoment] = [] // NEW: Social Feed Moments
+    
+    // NEW: Trip Planning & Gamification
+    @Published var checklists: [TripChecklist] = []
+    
+    // Remote config
+
     
     @Published var favoriteSpotIds: Set<UUID> = []
     @Published var favoriteGearIds: Set<UUID> = []
@@ -441,9 +448,9 @@ class AppDataStore: ObservableObject {
         firebase.fetchSpots { [weak self] (fetchedSpots: [CampingSpot]) in
             DispatchQueue.main.async {
                 guard let self = self else { return }
-                // FIXED: Use only real data
                 self.spots = fetchedSpots
-                self.fetchRecommendations() // NEW: Trigger AI logic
+                self.fetchRecommendations() // Trigger AI logic
+                self.fetchGlobalMoments() // Load Social Feed
             }
         }
     }
@@ -617,13 +624,47 @@ class AppDataStore: ObservableObject {
             }
         }
     }
+    
+    func fetchGlobalMoments() {
+        firebase.fetchGlobalMoments { [weak self] moments in
+            DispatchQueue.main.async {
+                withAnimation { self?.globalMoments = moments }
+            }
+        }
+    }
+    
+    func postGlobalMoment(imageData: Data, caption: String?) {
+        guard let uid = firebase.user?.uid, let name = userProfile?.name else { return }
+        
+        firebase.uploadImage(data: imageData, folder: "kashta_moments") { [weak self] url in
+            guard let self = self, let url = url else { return }
+            
+            let newMoment = SpotMoment(
+                id: UUID(),
+                userId: uid,
+                userName: name,
+                imageURL: url,
+                timestamp: Date(),
+                caption: caption
+            )
+            
+            DispatchQueue.main.async {
+                withAnimation { self.globalMoments.insert(newMoment, at: 0) }
+            }
+            
+            self.firebase.addGlobalMoment(moment: newMoment)
+        }
+    }
 
     // MARK: - Favorites Logic
     func toggleFavoriteSpot(_ spot: CampingSpot) {
-        if favoriteSpotIds.contains(spot.id) {
+        let isFavorite = favoriteSpotIds.contains(spot.id)
+        if isFavorite {
             favoriteSpotIds.remove(spot.id)
         } else {
             favoriteSpotIds.insert(spot.id)
+            triggerBadgeUnlock(for: "explorer", threshold: 1) // First Favorite
+            triggerBadgeUnlock(for: "pro_explorer", threshold: 5) // Fifth Favorite
         }
         syncFavorites()
     }
@@ -717,6 +758,53 @@ class AppDataStore: ObservableObject {
         // Upload to Firebase for persistence
         for cat in defaults {
             firebase.addCategoryToFirebase(cat)
+        }
+    }
+    
+    // MARK: - Gamification Logic (Badges)
+    func triggerBadgeUnlock(for badgeId: String, threshold: Int) {
+        guard var userProfile = userProfile else { return }
+        if userProfile.unlockedBadges.contains(badgeId) { return }
+        
+        let conditionMet: Bool
+        switch badgeId {
+        case "explorer": conditionMet = favoriteSpotIds.count >= threshold
+        case "pro_explorer": conditionMet = favoriteSpotIds.count >= threshold
+        default: conditionMet = false
+        }
+        
+        if conditionMet {
+            userProfile.unlockedBadges.append(badgeId)
+            self.userProfile = userProfile
+            // In a full app, you should synchronize this correctly with Firestore
+            
+            // Show Local Notification
+            let content = UNMutableNotificationContent()
+            content.title = "مبروك! وسام جديد 🏅"
+            content.body = "لقد فتحت وساماً جديداً في الجواز الخاص بك!"
+            content.sound = .default
+            let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
+            UNUserNotificationCenter.current().add(request)
+        }
+    }
+    
+    // MARK: - Checklists Generation (Default Data)
+    func loadDefaultChecklists() {
+        if checklists.isEmpty {
+            checklists = [
+                TripChecklist(name: "كشتة شتوية 🥶", items: [
+                    ChecklistItem(title: "حطب للتدفئة"),
+                    ChecklistItem(title: "بطانيات شتوية"),
+                    ChecklistItem(title: "دلة قهوة و ادوات"),
+                    ChecklistItem(title: "كشاف قوي")
+                ], emoji: "🥶"),
+                TripChecklist(name: "تخييم سريع ⛺️", items: [
+                    ChecklistItem(title: "خيمة سريعة الفتح"),
+                    ChecklistItem(title: "فرشة أرضية"),
+                    ChecklistItem(title: "ترمس ماء", isCompleted: true),
+                    ChecklistItem(title: "ولاعة وكبريت")
+                ], emoji: "⛺️")
+            ]
         }
     }
 }
