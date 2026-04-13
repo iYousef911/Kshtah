@@ -239,78 +239,77 @@ struct HomeFeedContent: View {
                     // Header with Parallax & Fade
                     GeometryReader { geo in
                         let minY = geo.frame(in: .global).minY
-                        let opacity = max(0, min(1, (minY + 20) / 50)) // Fade out as you scroll up
+                        let opacity = max(0, min(1, (minY + 20) / 50))
                         
-                        HStack {
-                            VStack(alignment: .leading) {
-                                HStack {
-                                    Text(settings.t("مرحباً،") + " \(userName) 👋")
-                                        .font(.title2.weight(.bold))
-                                        .foregroundStyle(Color.white)
-                                    
-                                    if store.currentTheme == .foundingDay {
-                                        FoundingDayBadge()
-                                            .scaleEffect(0.6)
-                                            .frame(width: 30, height: 30)
-                                    }
-                                    
-                                    if store.userProfile?.isAdmin == true {
-                                        Image(systemName: "checkmark.shield.fill")
-                                            .foregroundStyle(store.appColor)
-                                    }
+                        VStack(alignment: .leading, spacing: 8) {
+                            // Row 1: Greeting (full width, never truncated)
+                            HStack(spacing: 6) {
+                                Text(settings.t("مرحباً،") + " \(userName) 👋")
+                                    .font(.title2.weight(.bold))
+                                    .foregroundStyle(.white)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.85)
+                                
+                                if store.currentTheme == .foundingDay {
+                                    FoundingDayBadge()
+                                        .scaleEffect(0.6)
+                                        .frame(width: 24, height: 24)
                                 }
+                                if store.userProfile?.isAdmin == true {
+                                    Image(systemName: "checkmark.shield.fill")
+                                        .foregroundStyle(store.appColor)
+                                        .font(.subheadline)
+                                }
+                                Spacer()
+                            }
+                            
+                            // Row 2: Subtitle + Action Buttons on same line
+                            HStack(spacing: 8) {
                                 Text(settings.t(store.homeTitleText))
                                     .font(.subheadline)
-                                    .foregroundStyle(Color.white.opacity(0.7))
+                                    .foregroundStyle(.white.opacity(0.7))
+                                    .lineLimit(1)
+                                
+                                Spacer()
+                                
+                                // Action buttons — compact icon-only strip
+                                HStack(spacing: 2) {
+                                    Button(action: { showChecklists = true }) {
+                                        Image(systemName: "checklist")
+                                            .padding(10)
+                                            .foregroundStyle(.white)
+                                    }
+                                    Button(action: { showChatDashboard = true }) {
+                                        Image(systemName: "bubble.left.and.bubble.right.fill")
+                                            .padding(10)
+                                            .foregroundStyle(.white)
+                                    }
+                                    Button(action: { showInbox = true }) {
+                                        Image(systemName: "envelope.badge.fill")
+                                            .padding(10)
+                                            .foregroundStyle(.white)
+                                    }
+                                    Button(action: { showNotifications = true }) {
+                                        Image(systemName: "bell.badge.fill")
+                                            .padding(10)
+                                            .foregroundStyle(.white)
+                                    }
+                                    Button(action: { showConvoy = true }) {
+                                        Image(systemName: "car.2.fill")
+                                            .padding(10)
+                                            .foregroundStyle(.white)
+                                    }
+                                }
+                                .glassEffect(GlassStyle.regular.interactive(), in: Capsule())
                             }
-                            Spacer()
-                            
-                            // Action Buttons
-                            HStack(spacing: 4) {
-                                Button(action: { showCompass = true }) {
-                                    Image(systemName: "safari.fill")
-                                        .padding(12)
-                                        .foregroundStyle(Color.white)
-                                }
-                                
-                                Button(action: { showChecklists = true }) {
-                                    Image(systemName: "checklist")
-                                        .padding(12)
-                                        .foregroundStyle(Color.white)
-                                }
-                                
-                                Button(action: { showChatDashboard = true }) {
-                                    Image(systemName: "bubble.left.and.bubble.right.fill")
-                                        .padding(12)
-                                        .foregroundStyle(Color.white)
-                                }
-                                
-                                Button(action: { showInbox = true }) {
-                                    Image(systemName: "envelope.badge.fill")
-                                        .padding(12)
-                                        .foregroundStyle(Color.white)
-                                }
-                                
-                                Button(action: { showNotifications = true }) {
-                                    Image(systemName: "bell.badge.fill")
-                                        .padding(12)
-                                        .foregroundStyle(Color.white)
-                                }
-                                
-                                Button(action: { showConvoy = true }) {
-                                    Image(systemName: "car.2.fill")
-                                        .padding(12)
-                                        .foregroundStyle(Color.white)
-                                }
-                            }
-                            .glassEffect(GlassStyle.regular.interactive(), in: Capsule())
                         }
                         .padding(.horizontal)
-                        .opacity(opacity) // Apply Fade
-                        .scaleEffect(0.9 + (0.1 * opacity)) // Subtle Scale
+                        .opacity(opacity)
+                        .scaleEffect(0.95 + (0.05 * opacity))
                     }
-                    .frame(height: 60) // Fixed height placeholder
+                    .frame(height: 72) // Taller to accommodate two rows
                     .zIndex(1)
+
                     
                     
                     // Categories (Entrance Animation 1)

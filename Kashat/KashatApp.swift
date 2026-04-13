@@ -25,6 +25,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, MessagingDelegate { // NEW P
         
         FirebaseApp.configure()
         
+        // Register interactive notification action buttons (Open الخريطة / Dismiss)
+        Task { await SmartNotificationEngine.shared.registerNotificationCategories() }
+        
         // NEW: Request Notification Permissions
         Messaging.messaging().delegate = self
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in

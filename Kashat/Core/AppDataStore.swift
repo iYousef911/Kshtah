@@ -144,6 +144,9 @@ class AppDataStore: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+        
+        // 5. Track last-active date for smart nudge
+        UserDefaults.standard.set(Date(), forKey: "last_active_date")
     }
     
     // MARK: - Gear Logic
@@ -395,6 +398,22 @@ class AppDataStore: ObservableObject {
         UNUserNotificationCenter.current().add(request)
     }
     
+    // MARK: - Smart Notification Scheduling (AI-powered)
+    func scheduleSmartNotificationsIfNeeded() {
+        let lastActiveDate = UserDefaults.standard.object(forKey: "last_active_date") as? Date
+        Task {
+            await SmartNotificationEngine.shared.scheduleSmartNotifications(
+                userName: userProfile?.name ?? "الكشاتة",
+                favoriteCount: favoriteSpotIds.count,
+                lastActiveDate: lastActiveDate,
+                topSpots: Array(favoriteSpotIds.prefix(3)).compactMap { id in
+                    spots.first(where: { $0.id == id })?.name
+                },
+                unlockedBadges: userProfile?.unlockedBadges ?? []
+            )
+        }
+    }
+    
     // MARK: - User Data & Wallet
     func loadUserData(uid: String) {
         fetchUserChats(uid: uid) // NEW: Load chats automatically
@@ -405,6 +424,8 @@ class AppDataStore: ObservableObject {
                     self?.favoriteSpotIds = Set(profile.favoriteSpotIds.compactMap { UUID(uuidString: $0) })
                     self?.favoriteGearIds = Set(profile.favoriteGearIds.compactMap { UUID(uuidString: $0) })
                 }
+                // AI-powered smart notification scheduling runs after profile is ready
+                self?.scheduleSmartNotificationsIfNeeded()
             }
         }
         firebase.fetchBookings(uid: uid) { [weak self] (bookings: [Booking]) in
@@ -633,7 +654,7 @@ class AppDataStore: ObservableObject {
         }
     }
     
-    func postGlobalMoment(imageData: Data, caption: String?) {
+    func postGlobalMoment(imageData: Data, caption: String?, spotName: String? = nil) {
         guard let uid = firebase.user?.uid, let name = userProfile?.name else { return }
         
         firebase.uploadImage(data: imageData, folder: "kashta_moments") { [weak self] url in
@@ -643,9 +664,13 @@ class AppDataStore: ObservableObject {
                 id: UUID(),
                 userId: uid,
                 userName: name,
+                userProfileImageURL: self.userProfile?.profileImageURL,
                 imageURL: url,
                 timestamp: Date(),
-                caption: caption
+                caption: caption,
+                likesCount: 0,
+                likedByUserIds: [],
+                spotName: spotName
             )
             
             DispatchQueue.main.async {
@@ -655,6 +680,30 @@ class AppDataStore: ObservableObject {
             self.firebase.addGlobalMoment(moment: newMoment)
         }
     }
+    
+    // MARK: - Like / Unlike Moment
+    func toggleLikeMoment(_ moment: SpotMoment) {
+        guard let uid = firebase.user?.uid else { return }
+        guard let idx = globalMoments.firstIndex(where: { $0.id == moment.id }) else { return }
+        
+        let alreadyLiked = globalMoments[idx].likedByUserIds.contains(uid)
+        
+        if alreadyLiked {
+            globalMoments[idx].likedByUserIds.removeAll { $0 == uid }
+            globalMoments[idx].likesCount = max(0, globalMoments[idx].likesCount - 1)
+        } else {
+            globalMoments[idx].likedByUserIds.append(uid)
+            globalMoments[idx].likesCount += 1
+        }
+        
+        // Sync to Firestore
+        let updatedMoment = globalMoments[idx]
+        firebase.db.collection("kashta_moments").document(moment.id.uuidString).updateData([
+            "likesCount": updatedMoment.likesCount,
+            "likedByUserIds": updatedMoment.likedByUserIds
+        ])
+    }
+
 
     // MARK: - Favorites Logic
     func toggleFavoriteSpot(_ spot: CampingSpot) {
@@ -776,15 +825,22 @@ class AppDataStore: ObservableObject {
         if conditionMet {
             userProfile.unlockedBadges.append(badgeId)
             self.userProfile = userProfile
-            // In a full app, you should synchronize this correctly with Firestore
+            // In a full app, synchronize this with Firestore
             
-            // Show Local Notification
-            let content = UNMutableNotificationContent()
-            content.title = "مبروك! وسام جديد 🏅"
-            content.body = "لقد فتحت وساماً جديداً في الجواز الخاص بك!"
-            content.sound = .default
-            let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
-            UNUserNotificationCenter.current().add(request)
+            // AI-powered badge notification
+            let ctx = NotificationContext(
+                userName: userProfile.name,
+                hour: Calendar.current.component(.hour, from: Date()),
+                weekday: Calendar.current.component(.weekday, from: Date()),
+                favoriteCount: favoriteSpotIds.count,
+                topSpot: spots.first(where: { favoriteSpotIds.contains($0.id) })?.name ?? "الكشتة",
+                daysSinceLastActive: 0,
+                unlockedBadges: userProfile.unlockedBadges,
+                now: Date()
+            )
+            Task {
+                await SmartNotificationEngine.shared.sendEventNotification(type: .badgeMilestone, context: ctx)
+            }
         }
     }
     

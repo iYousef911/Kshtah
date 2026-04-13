@@ -151,9 +151,30 @@ struct SpotMoment: Identifiable, Codable, Hashable {
     let id: UUID
     let userId: String
     let userName: String
+    let userProfileImageURL: String?   // NEW: avatar
     let imageURL: String
     let timestamp: Date
     let caption: String?
+    var likesCount: Int                // NEW: like counter
+    var likedByUserIds: [String]       // NEW: who liked it
+    var spotName: String?              // NEW: optional location tag
+    
+    init(id: UUID = UUID(), userId: String, userName: String,
+         userProfileImageURL: String? = nil,
+         imageURL: String, timestamp: Date, caption: String? = nil,
+         likesCount: Int = 0, likedByUserIds: [String] = [],
+         spotName: String? = nil) {
+        self.id = id
+        self.userId = userId
+        self.userName = userName
+        self.userProfileImageURL = userProfileImageURL
+        self.imageURL = imageURL
+        self.timestamp = timestamp
+        self.caption = caption
+        self.likesCount = likesCount
+        self.likedByUserIds = likedByUserIds
+        self.spotName = spotName
+    }
     
     var timeAgo: String {
         let formatter = RelativeDateTimeFormatter()
@@ -162,6 +183,7 @@ struct SpotMoment: Identifiable, Codable, Hashable {
         return formatter.localizedString(for: timestamp, relativeTo: Date())
     }
 }
+
 
 struct ChatMessage: Identifiable, Hashable, Codable {
     let id: UUID
