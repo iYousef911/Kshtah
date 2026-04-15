@@ -20,6 +20,11 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        // Removed auto-request: manager.requestWhenInUseAuthorization()
+        // Removed auto-start: manager.startUpdatingLocation()
+    }
+    
+    func requestLocationPermission() {
         manager.requestWhenInUseAuthorization()
         manager.startUpdatingLocation()
     }

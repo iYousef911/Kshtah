@@ -221,6 +221,45 @@ class AIService {
         return "المعذرة، واجهت مشكلة في الاتصال 🙏 حاول مرة ثانية بعد شوي!"
     }
     
+    // Onboarding AI Insight
+    func generateOnboardingInsight(goal: String, painPoint: String, features: [String]) async -> String {
+        let featuresString = features.joined(separator: "، ")
+        let prompt = """
+        المستخدم يريد تطبيق كشتة لتحقيق الهدف: \(goal).
+        العقبة الأساسية التي تواجهه: \(painPoint).
+        يهتم بـ: \(featuresString).
+        
+        اكتب نصيحة سريعة وجذابة جداً (جملة واحدة فقط باللهجة السعودية البيضاء) ترحب به في التطبيق وتعده بتجربة تحل مشكلته وتحقق هدفه الذي ذكره.
+        استخدم إيموجي واحد أو اثنين. لا تزد عن 15 كلمة.
+        """
+        
+        var request = URLRequest(url: workerURL)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 10
+        
+        let body: [String: Any] = [
+            "prompt": prompt,
+            "temperature": 0.8,
+            "max_tokens": 100
+        ]
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+            let (data, response) = try await session.data(for: request)
+            
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200,
+               let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let content = json["content"] as? String {
+                return content.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        } catch {
+            print("⚠️ Onboarding Insight Error: \(error)")
+        }
+        
+        return "الذكاء الاصطناعي جاهز يخطط لك أفضل كشتة بناءً على اختياراتك 🌟"
+    }
+    
     private func fallbackInsight(temperature: Double) -> String {
         // Fallback context-aware logic if API fails or no key
         if temperature < 15 {

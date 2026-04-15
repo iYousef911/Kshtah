@@ -278,11 +278,9 @@ actor SmartNotificationEngine {
         let settings = await center.notificationSettings()
         if settings.authorizationStatus == .authorized { return true }
         
-        do {
-            return try await center.requestAuthorization(options: [.alert, .sound, .badge])
-        } catch {
-            return false
-        }
+        // Do NOT auto-prompt the user here (e.g. via requestAuthorization).
+        // The permission prompt should only be triggered by Onboarding or explicit setting toggles.
+        return false
     }
     
     private func firstName(from full: String) -> String {

@@ -28,23 +28,18 @@ class AppDelegate: NSObject, UIApplicationDelegate, MessagingDelegate { // NEW P
         // Register interactive notification action buttons (Open الخريطة / Dismiss)
         Task { await SmartNotificationEngine.shared.registerNotificationCategories() }
         
-        // NEW: Request Notification Permissions
+        // NEW: Assign Delegate (Permission requested during Onboarding)
         Messaging.messaging().delegate = self
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
-            print("Permission granted: \(granted)")
-        }
-        application.registerForRemoteNotifications()
+        
+        // Removed auto-request here to allow Onboarding flow to handle it.
+        // application.registerForRemoteNotifications() will be called after permission is granted.
         
         
         // Enable verbose logging for debugging (remove in production)
                OneSignal.Debug.setLogLevel(.LL_VERBOSE)
                // Initialize with your OneSignal App ID
                OneSignal.initialize("425a7450-e204-4d77-b5f3-9f9246ae9d3f", withLaunchOptions: launchOptions)
-               // Use this method to prompt for push notifications.
-               // We recommend removing this method after testing and instead use In-App Messages to prompt for notification permission.
-               OneSignal.Notifications.requestPermission({ accepted in
-                 print("User accepted notifications: \(accepted)")
-               }, fallbackToSettings: false)
+               // Removed auto-request here to allow Onboarding flow to handle it via UNUserNotificationCenter.
 
         
         
